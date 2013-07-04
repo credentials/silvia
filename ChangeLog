@@ -1,0 +1,6 @@
+$Id: ChangeLog 42 2013-06-20 12:47:04Z rijswijk $
+
+2013-06-20	Roland van Rijswijk-Deij <rijswijk@cs.ru.nl>
+
+	* Created initial autotoolized version
+	* Skeleton
