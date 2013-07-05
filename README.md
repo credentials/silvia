@@ -12,14 +12,34 @@ license. For more information, see LICENSE
 2. PREREQUISITES
 ================
 
+To build the library:
+ * GMP (>= 5.0), the GNU Multiple Precision Arithmetic Library
+ * OpenSSL (>= 0.9.8), the Open Source toolkit for SSL/TLS
+
+To run the tests:
+ * CppUnit (>= 1.10), the C++ port of JUnit
 
 3. BUILDING
 ===========
 
+To build the library, execute the following commands:
+
+  ./autogen.sh
+  ./configure
+  make
+
+To build and run the tests (to check if the library functions correctly), execute  the following command:
+
+  make check
 
 4. INSTALLING
 =============
 
+To install the library as a regular user, run:
+  sudo make install
+
+If you are root (administrative user), run:
+  make install
 
 5. USING THE LIBRARY
 ====================
