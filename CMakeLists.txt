@@ -1,0 +1,50 @@
+cmake_minimum_required(VERSION 2.8)
+
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
+project(silvia)
+
+set(PKG_NAME "silvia")
+set(PKG_DESCRIPTION "C++ library which provides (cryptographic) credential operations")
+set(PKG_AUTHOR "Roland van Rijswijk-Deij <rijswijk@cs.ru.nl>")
+set(PKG_VERSION_MAJOR "0")
+set(PKG_VERSION_MINOR "1")
+set(PKG_VERSION_PATCH "0")
+set(PKG_VERSION_INFO "Release")
+
+set(PKG_VERSION "${PKG_VERSION_MAJOR}.${PKG_VERSION_MINOR}.${PKG_VERSION_PATCH}")
+
+set(CPACK_PACKAGE_NAME ${PKG_NAME})
+set(CPACK_PACKAGE_VENDOR ${PKG_AUTHOR})
+set(CPACK_PACKAGE_CONTACT ${PKG_AUTHOR})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${PKG_DESCRIPTION})
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_VERSION_MAJOR ${PKG_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PKG_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PKG_VERSION_PATCH})
+
+set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2;ZIP")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${PKG_NAME}-${PKG_VERSION}")
+set(CPACK_SOURCE_IGNORE_FILES "/build/;~$;${CPACK_SOURCE_IGNORE_FILES}")
+
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libgmp10, libssl")
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${ARCH})
+set(CPACK_DEBIAN_PACKAGE_SECTION  "libs")
+
+set(CPACK_RPM_PACKAGE_LICENSE "BSD")
+set(CPACK_RPM_PACKAGE_REQUIRES "gmp, openssl")
+include(CPack)
+
+add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
+add_custom_target(deb COMMAND ${CMAKE_CPACK_COMMAND} -G DEB)
+add_custom_target(rpm COMMAND ${CMAKE_CPACK_COMMAND} -G RPM)
+
+option(BUILD_TESTS "Build unit tests" OFF)
+if (BUILD_TESTS)
+  enable_testing()
+  include(FindPkgConfig)
+  pkg_check_modules(CPPUNIT "cppunit" REQUIRED)
+endif (BUILD_TESTS)
+
+add_subdirectory(src)
