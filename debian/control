@@ -1,0 +1,26 @@
+Source: silvia
+Section: libs
+Priority: optional
+Maintainer: Pim Vullers <pim@cs.ru.nl>
+Build-Depends: cmake,
+               debhelper (>= 7),
+               libgmp10-dev,
+	       libssl-dev (>= 0.9.8)
+Standards-Version: 3.9.1
+Homepage: http://github.com/credentials/silvia
+
+Package: silvia
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: SImple Library for the Verification and Issuance of Attributes
+ C++ library which provides (cryptographic) credential operations.
+
+Package: silvia-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: silvia (= ${binary:Version}), ${misc:Depends}
+Description: SImple Library for the Verification and Issuance of Attributes
+ C++ library which provides (cryptographic) credential operations.
+ .
+ This package contains debugging symbols for the silvia library.
