@@ -19,7 +19,9 @@ commontest_SOURCES =		commontest.cpp \
 				syspartests.h \
 				syspartests.cpp \
 				randtests.h \
-				randtests.cpp
+				randtests.cpp \
+				bytestringtests.h \
+				bytestringtests.cpp
 
 commontest_LDADD =		../../libsilvia_convarch.la @OPENSSL_LIBS@ @CPPUNIT_LIBS@
 

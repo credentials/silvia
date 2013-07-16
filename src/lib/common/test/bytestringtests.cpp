@@ -272,3 +272,12 @@ void bytestring_tests::testBits()
 	CPPUNIT_ASSERT(b3.bits() == 20);
 	CPPUNIT_ASSERT(b4.bits() == 21);
 }
+
+void bytestring_tests::testMPZ()
+{
+	bytestring b1("0123456789");
+	bytestring b2("9876543210");
+	
+	CPPUNIT_ASSERT(b1.mpz_val() == mpz_class("0x123456789"));
+	CPPUNIT_ASSERT(b2.mpz_val() == mpz_class("0x9876543210"));
+}

@@ -31,3 +31,228 @@
 
  Smart card communication classes
  *****************************************************************************/
+ 
+#include "config.h"
+#include "silvia_card.h"
+#include "silvia_macros.h"
+#include <PCSC/winscard.h>
+#include <assert.h>
+#include <string.h>
+#include <vector>
+#include <stdio.h>
+
+////////////////////////////////////////////////////////////////////////
+// Card class
+////////////////////////////////////////////////////////////////////////
+  
+silvia_card::silvia_card(SCARDHANDLE card_handle, DWORD protocol, std::string reader_name)
+{
+	this->card_handle = card_handle;
+	this->protocol = protocol;
+	this->reader_name = reader_name;
+	
+	connected = true;
+	
+	status();
+}
+	
+silvia_card::~silvia_card()
+{
+	if (connected)
+	{
+		SCardDisconnect(card_handle, SCARD_UNPOWER_CARD);
+	}
+}
+
+int silvia_card::get_type()
+{
+	return SILVIA_CHANNEL_READER;
+}
+	
+bool silvia_card::status()
+{
+	if (!connected) return false;
+	
+	DWORD active_protocol;
+	DWORD state;
+	DWORD atr_len = MAX_ATR_SIZE;
+	DWORD reader_len = 0;
+	BYTE atr[MAX_ATR_SIZE];
+	
+	LONG rv = SCardStatus(card_handle, NULL, &reader_len, &state, &active_protocol, atr, &atr_len);
+	
+	connected = (rv == SCARD_S_SUCCESS) && (FLAG_SET(state, SCARD_PRESENT));
+	
+	if (!connected)
+	{
+		SCardDisconnect(card_handle, SCARD_UNPOWER_CARD);
+	}
+	
+	return connected;
+}
+	
+bool silvia_card::transmit(bytestring APDU, bytestring& data, unsigned short& sw)
+{
+	if (!connected) return false;
+	
+	data.resize(65536);
+	DWORD out_len = 65536;
+	SCARD_IO_REQUEST recv_req;
+		
+	LONG rv = SCardTransmit(
+		card_handle, 
+		protocol == SCARD_PROTOCOL_T0 ? SCARD_PCI_T0 : SCARD_PCI_T1, 
+		APDU.byte_str(), 
+		APDU.size(), 
+		&recv_req,
+		data.byte_str(),
+		&out_len);
+		
+	if (rv != SCARD_S_SUCCESS)
+	{
+		return false;
+	}
+	
+	data.resize(out_len);
+	
+	if (data.size() < 2)
+	{
+		return false;
+	}
+	
+	sw = data[data.size() - 2] << 8;
+	sw += data[data.size() - 1];
+	
+	data.resize(out_len - 2);
+	
+	return true;
+}
+
+std::string silvia_card::get_reader_name()
+{
+	return reader_name;
+}
+
+////////////////////////////////////////////////////////////////////////
+// Card monitor class
+////////////////////////////////////////////////////////////////////////
+
+// Initialise the one-and-only instance
+/*static*/ std::auto_ptr<silvia_card_monitor> silvia_card_monitor::_i(NULL);
+
+/*static*/ silvia_card_monitor* silvia_card_monitor::i()
+{
+	if (_i.get() == NULL)
+	{
+		_i = std::auto_ptr<silvia_card_monitor>(new silvia_card_monitor());
+	}
+
+	return _i.get();
+}
+	
+bool silvia_card_monitor::wait_for_card(silvia_card** card)
+{
+	assert(card != NULL);
+	
+	// First, find which card readers are available
+	LPTSTR readers;
+	LPTSTR readers_orig;
+	DWORD reader_len;
+	
+	LONG rv = SCardListReaders(pcsc_context, NULL, NULL, &reader_len);
+	
+	if ((rv != SCARD_S_SUCCESS) || (reader_len == 0))
+	{
+		return false;
+	}
+	
+	readers_orig = readers = (LPTSTR) malloc(reader_len * sizeof(char));
+	
+	rv = SCardListReaders(pcsc_context, NULL, readers, &reader_len);
+	
+	if (rv != SCARD_S_SUCCESS)
+	{
+		free(readers_orig);
+		
+		return false;
+	}
+	
+	// Add readers to availability structure
+	std::vector<SCARD_READERSTATE> reader_states;
+	
+	while (reader_len > 1)
+	{
+		size_t len = strlen(readers);
+		
+		SCARD_READERSTATE reader_state;
+		
+		reader_state.szReader = readers;
+		reader_state.pvUserData = NULL;
+		reader_state.dwCurrentState = SCARD_STATE_UNAWARE;
+		reader_state.dwEventState = SCARD_STATE_UNAWARE;
+		reader_state.cbAtr = MAX_ATR_SIZE;
+		
+		reader_states.push_back(reader_state);
+		
+		reader_len -= len + 1;
+		readers += len + 1;
+	}
+	
+	rv = SCardGetStatusChange(pcsc_context, INFINITE, &reader_states[0], reader_states.size());
+	
+	if (rv != SCARD_S_SUCCESS)
+	{
+		free(readers_orig);
+		
+		return false;
+	}
+	
+	while (true)
+	{
+		for (std::vector<SCARD_READERSTATE>::iterator i = reader_states.begin(); i != reader_states.end(); i++)
+		{
+			if (FLAG_SET(i->dwEventState, SCARD_STATE_PRESENT))
+			{
+				// Attempt to connect to this particular card
+				DWORD active_protocol;
+				SCARDHANDLE card_handle;
+				
+				rv = SCardConnect(pcsc_context, i->szReader, SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &card_handle, &active_protocol);
+				
+				if (rv == SCARD_S_SUCCESS)
+				{
+					*card = new silvia_card(card_handle, active_protocol, i->szReader);
+					
+					free(readers_orig);
+					
+					return true;
+				}
+			}
+			
+			i->dwCurrentState = i->dwEventState;
+		}
+		
+		rv = SCardGetStatusChange(pcsc_context, INFINITE, &reader_states[0], reader_states.size());
+		
+		if (rv != SCARD_S_SUCCESS)
+		{
+			break;
+		}
+	}
+	
+	free(readers_orig);
+	
+	return false;
+}
+	
+silvia_card_monitor::silvia_card_monitor()
+{
+	// FIXME: do something with the return value of this call rather
+	//        than asserting on failure
+	assert(SCardEstablishContext(SCARD_SCOPE_USER, NULL, NULL, &pcsc_context) == SCARD_S_SUCCESS);
+}
+
+silvia_card_monitor::~silvia_card_monitor()
+{
+	SCardReleaseContext(pcsc_context);
+}

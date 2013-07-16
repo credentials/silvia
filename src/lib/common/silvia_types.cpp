@@ -144,24 +144,26 @@ silvia_string_attribute::silvia_string_attribute(const std::string value)
 {
 	this->value = value;
 
-	silvia_hash h(SYSPAR(hash_type));
+	if (this->value.size() > (SYSPAR(l_m) / 8))
+	{
+		// Truncate!
+		this->value = this->value.substr(0, SYSPAR(l_m) / 8);
+	}
 
-	h.init();
-	h.update((const unsigned char*) value.c_str(), value.size());
-
-	this->attr_rep = h.final();
+	mpz_import(_Z(this->attr_rep), this->value.size(), 1, sizeof(char), 1, 0, this->value.c_str());
 }
 
 silvia_string_attribute& silvia_string_attribute::operator=(const std::string value)
 {
 	this->value = value;
 
-	silvia_hash h(SYSPAR(hash_type));
+	if (this->value.size() > (SYSPAR(l_m) / 8))
+	{
+		// Truncate!
+		this->value = this->value.substr(0, SYSPAR(l_m) / 8);
+	}
 
-	h.init();
-	h.update((const unsigned char*) value.c_str(), value.size());
-
-	this->attr_rep = h.final();
+	mpz_import(_Z(this->attr_rep), this->value.size(), 1, sizeof(char), 1, 0, this->value.c_str());
 }
 
 bool silvia_string_attribute::is_of_type(silvia_attr_t type)
@@ -172,6 +174,19 @@ bool silvia_string_attribute::is_of_type(silvia_attr_t type)
 std::string silvia_string_attribute::get_value()
 {
 	return value;
+}
+
+void silvia_string_attribute::from_rep(const mpz_class& rep)
+{
+	this->attr_rep = rep;
+	
+	size_t count;
+	
+	char* rep_data = (char*) mpz_export(NULL, &count, 1, sizeof(char), 1, 0, _Z(this->attr_rep));
+	
+	value = std::string(rep_data, count);
+	
+	free(rep_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,6 +232,11 @@ int silvia_integer_attribute::get_value()
 	return (int) mpz_get_ui(attr_rep.get_mpz_t());
 }
 
+void silvia_integer_attribute::from_rep(const mpz_class& rep)
+{
+	this->attr_rep = rep;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Boolean value attribute
 ////////////////////////////////////////////////////////////////////////////////
@@ -240,6 +260,11 @@ silvia_boolean_attribute& silvia_boolean_attribute::operator=(const bool value)
 bool silvia_boolean_attribute::is_of_type(silvia_attr_t type)
 {
 	return type == SILVIA_BOOL_ATTR;
+}
+
+void silvia_boolean_attribute::from_rep(const mpz_class& rep)
+{
+	this->attr_rep = rep;
 }
 
 bool silvia_boolean_attribute::get_value()

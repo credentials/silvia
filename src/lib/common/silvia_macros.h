@@ -50,5 +50,12 @@
  */
 #define printmpz(mpz_val) { char* mpzstr = mpz_get_str(NULL, 16, mpz_val.get_mpz_t()); printf("%s (%zd)", mpzstr, mpz_sizeinbase(mpz_val.get_mpz_t(), 2)); free(mpzstr); }
 
+/**
+ * FLAG_SET; returns true if a bit flag is set
+ * @param flags flags field to test
+ * @param flag flag to test
+ */
+#define FLAG_SET(flags, flag) ((flags & flag) == flag)
+
 #endif // !_SILVIA_MACROS_H
 

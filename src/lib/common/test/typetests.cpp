@@ -36,6 +36,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include "typetests.h"
 #include "silvia_types.h"
+#include "silvia_macros.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(type_tests);
 
@@ -95,9 +96,9 @@ void type_tests::test_attributes()
 {
 	silvia_attribute* generic = NULL;
 
-	silvia_string_attribute s("Silvia is a good friend of IRMA's");
-
-	CPPUNIT_ASSERT(s.rep() == mpz_class("0x55687fab21afc49462ad1a3fe83913445c402bafe5d4327c6786c6bbacadcc19"));
+	silvia_string_attribute s("Silvia is a good friend of IRMA");
+	
+	CPPUNIT_ASSERT(s.rep() == mpz_class("0x53696c766961206973206120676f6f6420667269656e64206f662049524d41"));
 
 	silvia_integer_attribute i1(50);
 	silvia_integer_attribute i2(mpz_class("125126127128129130131132133134135136137138139140"));
@@ -132,7 +133,7 @@ void type_tests::test_attributes()
 	CPPUNIT_ASSERT(generic->is_of_type(SILVIA_BOOL_ATTR) == true);
 	CPPUNIT_ASSERT(generic->is_of_type(SILVIA_UNDEFINED_ATTR) == false);
 
-	silvia_string_attribute t("Silvia is a good friend of IRMA's");
+	silvia_string_attribute t("Silvia is a good friend of IRMA");
 	silvia_string_attribute u("Saskia is the most wonderful niece in the world");
 
 	CPPUNIT_ASSERT(s.rep() == t.rep());
@@ -148,6 +149,16 @@ void type_tests::test_attributes()
 
 	CPPUNIT_ASSERT(b1.rep() == b3.rep());
 	CPPUNIT_ASSERT(b2.rep() != b3.rep());
+	
+	silvia_string_attribute s2;
+	s2.from_rep(mpz_class("0x5468697320697320612072656372656174696f6e2074657374"));
+	
+	CPPUNIT_ASSERT(s2.get_value() == "This is a recreation test");
+	
+	silvia_string_attribute s3;
+	s3.from_rep(mpz_class("0x0000000000000000000000000000000000000000000000000000000000796573"));
+	
+	CPPUNIT_ASSERT(s3.get_value() == "yes");
 }
 
 void type_tests::test_credential()
