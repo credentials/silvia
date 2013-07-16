@@ -4,6 +4,7 @@ set(SOURCES
 	hashtests.cpp
 	syspartests.cpp
 	randtests.cpp
+	bytestringtests.cpp
 )
 
 include_directories(..)

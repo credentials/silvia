@@ -6,8 +6,9 @@ set(PKG_SOVERSION 0) # increase when you add functionality
 set(PKG_INCLUDE_DIRS 
 	prover
 	verifier
-	${CMAKE_CURRENT_SOURCE_DIR}/issuer
-	${CMAKE_CURRENT_SOURCE_DIR}/common
+	issuer
+	common
+	pcsc
 	${CMAKE_BINARY_DIR}
 )
 
@@ -24,13 +25,16 @@ set(SOURCES
 	common/silvia_parameters.cpp
 	common/silvia_types.cpp
 	common/silvia_timer.cpp
+	common/silvia_bytestring.cpp
+	pcsc/silvia_apdu.cpp
+	pcsc/silvia_card.cpp
 )
 
 include(DetectArch)
 detect_arch()
 
 # dependencies
-set(PKG_DEPS libcrypto ${PKG_DEPS})
+set(PKG_DEPS libcrypto libpcsclite ${PKG_DEPS})
 
 # verifiy dependencies
 find_package(PkgConfig)
@@ -106,4 +110,5 @@ if (BUILD_TESTS)
   add_subdirectory(prover/test)
   add_subdirectory(verifier/test)
   add_subdirectory(test)
+  add_subdirectory(pcsc/test)
 endif (BUILD_TESTS)
