@@ -67,8 +67,14 @@ AC_ARG_WITH(
 ACX_OPENSSL(0,9,8)
 ACX_GMP
 AM_PATH_CPPUNIT(1.10.0, , AC_MSG_ERROR([libcppunit 1.10.0 or newer not found]))
+
+PKG_CHECK_MODULES([LIBCRYPTO], [libcrypto >= 0.9.8], , AC_MSG_ERROR([OpenSSL cryptography library 0.9.8 or newer not found]))
+AC_CHECK_LIB(crypto, BN_init)
+
 PKG_CHECK_MODULES([PCSC], [libpcsclite >= 1.4.0], , AC_MSG_ERROR([PC/SC lite 1.4.0 or newer not found]))
 AC_CHECK_LIB(pcsclite, SCardConnect)
+
+PKG_CHECK_MODULES([CPPUNIT], [cppunit >= 1.10.0], , AC_MSG_ERROR([CppUnit 1.10.0 or newer not found]))
 
 #PKG_CHECK_MODULES([LIBCONFIG], [libconfig >= 1.3.2],, AC_MSG_ERROR([libconfig 1.3.2 or newer not found]))
 
