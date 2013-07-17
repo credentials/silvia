@@ -37,6 +37,8 @@ detect_arch()
 set(PKG_DEPS libcrypto libpcsclite ${PKG_DEPS})
 
 # verifiy dependencies
+find_package(GMP)
+find_package(OpenSSL)
 find_package(PkgConfig)
 pkg_check_modules(DEPS REQUIRED ${PKG_DEPS})
 
