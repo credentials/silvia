@@ -37,6 +37,7 @@
 #include "silvia_verifier.h"
 #include "silvia_parameters.h"
 #include "silvia_rand.h"
+#include "silvia_macros.h"
 #include <stdio.h>
  
 silvia_card* get_card()
@@ -272,7 +273,7 @@ void exchange_apdu(silvia_card* card, std::string cmd_name, bytestring apdu, byt
 	}
 }
 
-bool test_full_proof(silvia_card* card)
+bool test_full_proof(silvia_card* card, mpz_class& n1_value, mpz_class& context_val, mpz_class& c_val, mpz_class& A_prime_val, mpz_class& e_hat_val, mpz_class& v_prime_hat_val, std::vector<mpz_class>& a_i_hat_val)
 {
 	printf("\n\n\n");
 	printf("TESTING FULL PROOF\n\n\n");
@@ -352,6 +353,8 @@ bool test_full_proof(silvia_card* card)
 	mpz_class n1 = verifier.get_verifier_nonce();
 	bytestring n1_val(n1);
 	
+	while (n1_val.size() < 10) n1_val = "00" + n1_val;
+	
 	silvia_apdu commit_apdu(0x80, 0x2a, 0x00, 0x00);
 	commit_apdu.append_data(n1_val);
 	
@@ -405,6 +408,15 @@ bool test_full_proof(silvia_card* card)
 	exchange_apdu(card, "GET RESPONSE", "802C0500", data, sw, 0x9000);
 	a_i_hat.push_back(data.mpz_val());
 	
+	// We have all the data, make a copy
+	context_val = context.mpz_val();
+	c_val = c;
+	A_prime_val = A_prime;
+	e_hat_val = e_hat;
+	v_prime_hat_val = v_prime_hat;
+	a_i_hat_val = a_i_hat;
+	n1_value = n1;
+	
 	////////////////////////////////////////////////////////////////////
 	// Step 7: verify the proof
 	////////////////////////////////////////////////////////////////////
@@ -445,7 +457,7 @@ int main(int argc, char* argv[])
 {
 	silvia_card* card = get_card();
 	
-	test_select_apdu(card);
+	/*test_select_apdu(card);
 	
 	test_validate_admin_pin(card);
 	
@@ -459,26 +471,170 @@ int main(int argc, char* argv[])
 	
 	test_get_signature(card);
 	
-	test_get_response(card);
+	test_get_response(card);*/
 
 	int fail_count = 0;
 	int ok_count = 0;
 	
+	std::vector<mpz_class> n1_vals;
+	std::vector<mpz_class> context_vals;
+	std::vector<mpz_class> c_vals;
+	std::vector<mpz_class> A_prime_vals;
+	std::vector<mpz_class> e_hat_vals;
+	std::vector<mpz_class> v_prime_hat_vals;
+	std::vector<std::vector<mpz_class> > a_i_hat_vals;
+	
+	size_t succ_max_n1_len = 0;
+	size_t succ_min_n1_len = 65536;
+	size_t fail_max_n1_len = 0;
+	size_t fail_min_n1_len = 65536;
+	
+	size_t succ_max_context_len = 0;
+	size_t succ_min_context_len = 65536;
+	size_t fail_max_context_len = 0;
+	size_t fail_min_context_len = 65536;
+	
+	size_t succ_max_c_len = 0;
+	size_t succ_min_c_len = 65536;
+	size_t fail_max_c_len = 0;
+	size_t fail_min_c_len = 65536;
+	
+	size_t succ_max_A_prime_len = 0;
+	size_t succ_min_A_prime_len = 65536;
+	size_t fail_max_A_prime_len = 0;
+	size_t fail_min_A_prime_len = 65536;
+	
+	size_t succ_max_e_hat_len = 0;
+	size_t succ_min_e_hat_len = 65536;
+	size_t fail_max_e_hat_len = 0;
+	size_t fail_min_e_hat_len = 65536;
+	
+	size_t succ_max_v_prime_hat_len = 0;
+	size_t succ_min_v_prime_hat_len = 65536;
+	size_t fail_max_v_prime_hat_len = 0;
+	size_t fail_min_v_prime_hat_len = 65536;
+	
+	size_t succ_max_a_i_hat_len = 0;
+	size_t succ_min_a_i_hat_len = 65536;
+	size_t fail_max_a_i_hat_len = 0;
+	size_t fail_min_a_i_hat_len = 65536;
+	
 	for (int i = 0; i < 100; i++)
 	{
-		if (test_full_proof(card))
+		mpz_class n1;
+		mpz_class context;
+		mpz_class c;
+		mpz_class A_prime;
+		mpz_class e_hat;
+		mpz_class v_prime_hat;
+		std::vector<mpz_class> a_i_hat;
+		
+		bool result = test_full_proof(card, n1, context, c, A_prime, e_hat, v_prime_hat, a_i_hat);
+		
+		size_t n1_size = mpz_sizeinbase(_Z(n1), 2);
+		size_t context_size = mpz_sizeinbase(_Z(context), 2);
+		size_t c_size = mpz_sizeinbase(_Z(c), 2);
+		size_t A_prime_size = mpz_sizeinbase(_Z(A_prime), 2);
+		size_t e_hat_size = mpz_sizeinbase(_Z(e_hat), 2);
+		size_t v_prime_hat_size = mpz_sizeinbase(_Z(v_prime_hat), 2);
+		size_t min_a_i_hat = 65536;
+		size_t max_a_i_hat = 0;
+		
+		for (std::vector<mpz_class>::iterator ait = a_i_hat.begin(); ait != a_i_hat.end(); ait++)
+		{
+			size_t a_i_hat_size = mpz_sizeinbase(_Z((*ait)), 2);
+			
+			min_a_i_hat = (a_i_hat_size < min_a_i_hat) ? a_i_hat_size : min_a_i_hat;
+			max_a_i_hat = (a_i_hat_size > max_a_i_hat) ? a_i_hat_size : max_a_i_hat;
+		}
+		
+		if (result)
 		{
 			ok_count++;
+			
+			succ_max_n1_len = (n1_size > succ_max_n1_len) ? n1_size : succ_max_n1_len;
+			succ_min_n1_len = (n1_size < succ_min_n1_len) ? n1_size : succ_min_n1_len;
+			succ_max_context_len = (context_size > succ_max_context_len) ? context_size : succ_max_context_len;
+			succ_min_context_len = (context_size < succ_min_context_len) ? context_size : succ_min_context_len;
+			succ_max_c_len = (c_size > succ_max_c_len) ? c_size : succ_max_c_len;
+			succ_min_c_len = (c_size < succ_min_c_len) ? c_size : succ_min_c_len;
+			succ_max_A_prime_len = (A_prime_size > succ_max_A_prime_len) ? A_prime_size : succ_max_A_prime_len;
+			succ_min_A_prime_len = (A_prime_size < succ_min_A_prime_len) ? A_prime_size : succ_min_A_prime_len;
+			succ_max_e_hat_len = (e_hat_size > succ_max_e_hat_len) ? e_hat_size : succ_max_e_hat_len;
+			succ_min_e_hat_len = (e_hat_size < succ_min_e_hat_len) ? e_hat_size : succ_min_e_hat_len;
+			succ_max_v_prime_hat_len = (v_prime_hat_size > succ_max_v_prime_hat_len) ? v_prime_hat_size : succ_max_v_prime_hat_len;
+			succ_min_v_prime_hat_len = (v_prime_hat_size < succ_min_v_prime_hat_len) ? v_prime_hat_size : succ_min_v_prime_hat_len;
+			succ_max_a_i_hat_len = (max_a_i_hat > succ_max_a_i_hat_len) ? max_a_i_hat : succ_max_a_i_hat_len;
+			succ_min_a_i_hat_len = (min_a_i_hat < succ_min_a_i_hat_len) ? min_a_i_hat : succ_min_a_i_hat_len;
 		}
 		else
 		{
 			fail_count++;
+			
+			n1_vals.push_back(n1);
+			context_vals.push_back(context);
+			c_vals.push_back(c);
+			A_prime_vals.push_back(A_prime);
+			e_hat_vals.push_back(e_hat);
+			v_prime_hat_vals.push_back(v_prime_hat);
+			a_i_hat_vals.push_back(a_i_hat);
+
+			fail_max_n1_len = (n1_size > fail_max_n1_len) ? n1_size : fail_max_n1_len;
+			fail_min_n1_len = (n1_size < fail_min_n1_len) ? n1_size : fail_min_n1_len;
+			fail_max_context_len = (context_size > fail_max_context_len) ? context_size : fail_max_context_len;
+			fail_min_context_len = (context_size < fail_min_context_len) ? context_size : fail_min_context_len;
+			fail_max_c_len = (c_size > fail_max_c_len) ? c_size : fail_max_c_len;
+			fail_min_c_len = (c_size < fail_min_c_len) ? c_size : fail_min_c_len;
+			fail_max_A_prime_len = (A_prime_size > fail_max_A_prime_len) ? A_prime_size : fail_max_A_prime_len;
+			fail_min_A_prime_len = (A_prime_size < fail_min_A_prime_len) ? A_prime_size : fail_min_A_prime_len;
+			fail_max_e_hat_len = (e_hat_size > fail_max_e_hat_len) ? e_hat_size : fail_max_e_hat_len;
+			fail_min_e_hat_len = (e_hat_size < fail_min_e_hat_len) ? e_hat_size : fail_min_e_hat_len;
+			fail_max_v_prime_hat_len = (v_prime_hat_size > fail_max_v_prime_hat_len) ? v_prime_hat_size : fail_max_v_prime_hat_len;
+			fail_min_v_prime_hat_len = (v_prime_hat_size < fail_min_v_prime_hat_len) ? v_prime_hat_size : fail_min_v_prime_hat_len;
+			fail_max_a_i_hat_len = (max_a_i_hat > fail_max_a_i_hat_len) ? max_a_i_hat : fail_max_a_i_hat_len;
+			fail_min_a_i_hat_len = (min_a_i_hat < fail_min_a_i_hat_len) ? min_a_i_hat : fail_min_a_i_hat_len;
 		}
 		
 		printf("\nSuccesses: %d, failures %d\n", ok_count, fail_count);
 	}
 	
+	printf("\n");
+	
+	for (int i = 0; i < fail_count; i++)
+	{
+		printf("Failure %d\n\n", i + 1);
+		printf("n1      = "); printmpz(n1_vals[i]); printf("\n");
+		printf("context = "); printmpz(context_vals[i]); printf("\n");
+		printf("c       = "); printmpz(c_vals[i]); printf("\n");
+		printf("A'      = "); printmpz(A_prime_vals[i]); printf("\n");
+		printf("e^      = "); printmpz(e_hat_vals[i]); printf("\n");
+		printf("v'^     = "); printmpz(v_prime_hat_vals[i]); printf("\n");
+		
+		int count = 0;
+		
+		for (std::vector<mpz_class>::iterator ait = a_i_hat_vals[i].begin(); ait != a_i_hat_vals[i].end(); ait++)
+		{
+			printf("a[%d]^   = ", count++); printmpz((*ait)); printf("\n");
+		}
+		
+		printf("\n");
+	}
+	
+	printf("\n");
+	
+	printf("Value        min(succ) max(succ) min(fail) max(fail)\n");
+	printf("n1           %9zd %9zd %9zd %9zd\n", succ_min_n1_len, succ_max_n1_len, fail_min_n1_len, fail_max_n1_len);
+	printf("context      %9zd %9zd %9zd %9zd\n", succ_min_context_len, succ_max_context_len, fail_min_context_len, fail_max_context_len);
+	printf("c            %9zd %9zd %9zd %9zd\n", succ_min_c_len, succ_max_c_len, fail_min_c_len, fail_max_c_len);
+	printf("A'           %9zd %9zd %9zd %9zd\n", succ_min_A_prime_len, succ_max_A_prime_len, fail_min_A_prime_len, fail_max_A_prime_len);
+	printf("e^           %9zd %9zd %9zd %9zd\n", succ_min_e_hat_len, succ_max_e_hat_len, fail_min_e_hat_len, fail_max_e_hat_len);
+	printf("v'^          %9zd %9zd %9zd %9zd\n", succ_min_v_prime_hat_len, succ_max_v_prime_hat_len, fail_min_v_prime_hat_len, fail_max_v_prime_hat_len);
+	printf("a[i]^        %9zd %9zd %9zd %9zd\n", succ_min_a_i_hat_len, succ_max_a_i_hat_len, fail_min_a_i_hat_len, fail_max_a_i_hat_len);
+	
+	printf("\n");
+	
 	delete card;
 	
 	return 0;
 }
+	
