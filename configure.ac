@@ -123,6 +123,7 @@ AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 	src/bin/Makefile
+	src/bin/keygen/Makefile
 	src/lib/Makefile
 	src/lib/test/Makefile
 	src/lib/common/Makefile
