@@ -51,6 +51,20 @@
 #define printmpz(mpz_val) { char* mpzstr = mpz_get_str(NULL, 16, mpz_val.get_mpz_t()); printf("%s (%zd)", mpzstr, mpz_sizeinbase(mpz_val.get_mpz_t(), 2)); free(mpzstr); }
 
 /**
+ * fprintmpz; used to print mpz_class values as hex to a file
+ * @param f the file to write to
+ * @param mpz_val the value to print the hex representation for
+ */
+#define fprintmpz(f, mpz_val) { char* mpzstr = mpz_get_str(NULL, 16, mpz_val.get_mpz_t()); fprintf(f, "%s", mpzstr, mpz_sizeinbase(mpz_val.get_mpz_t(), 2)); free(mpzstr); }
+
+/**
+ * fprintmpzdec; used to print mpz_class values as decimal to a file
+ * @param f the file to write to
+ * @param mpz_val the value to print the hex representation for
+ */
+#define fprintmpzdec(f, mpz_val) { char* mpzstr = mpz_get_str(NULL, 10, mpz_val.get_mpz_t()); fprintf(f, "%s", mpzstr, mpz_sizeinbase(mpz_val.get_mpz_t(), 2)); free(mpzstr); }
+
+/**
  * FLAG_SET; returns true if a bit flag is set
  * @param flags flags field to test
  * @param flag flag to test
