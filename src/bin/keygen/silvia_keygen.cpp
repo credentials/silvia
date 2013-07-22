@@ -37,6 +37,7 @@
 #include "silvia_parameters.h"
 #include "silvia_macros.h"
 #include <string>
+#include <unistd.h>
 
 // Default modulus size for new keys
 #define DEFAULT_BITSIZE 2048
