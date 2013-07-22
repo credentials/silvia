@@ -128,6 +128,9 @@ int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, size_t num_attrib
 	fprintf(priv_key_file, "  </Elements>\n");
 	fprintf(priv_key_file, "</IssuerPrivateKey>\n");
 	
+	delete pub_key;
+	delete priv_key;
+	
 	return 1;
 }
 
