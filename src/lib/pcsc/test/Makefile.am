@@ -1,30 +1,18 @@
-# $Id: Makefile.am 49 2013-06-25 14:35:03Z rijswijk $
+# $Id$
 
 MAINTAINERCLEANFILES = 		$(srcdir)/Makefile.in
 
-AM_CPPFLAGS = 			-I$(srcdir)/.. \
-				-I$(srcdir)/../.. \
-				-I$(srcdir)/../../prover \
-				-I$(srcdir)/../../issuer \
+AM_CPPFLAGS = 			-I$(srcdir)/../../common \
 				-I$(srcdir)/../../verifier \
-				@CPPUNIT_CFLAGS@
+				-I$(srcdir)/../.. \
+				-I$(srcdir)/.. \
+				-I/usr/include/PCSC
 
-check_PROGRAMS =		commontest
+check_PROGRAMS =		silvia_pcsctest
 
-commontest_SOURCES =		commontest.cpp \
-				typetests.h \
-				typetests.cpp \
-				hashtests.h \
-				hashtests.cpp \
-				syspartests.h \
-				syspartests.cpp \
-				randtests.h \
-				randtests.cpp
+silvia_pcsctest_SOURCES =	silvia_pcsctest.cpp
 
-commontest_LDADD =		../../libsilvia_convarch.la @OPENSSL_LIBS@ @CPPUNIT_LIBS@
+silvia_pcsctest_LDADD =		../../libsilvia_convarch.la @OPENSSL_LIBS@ @CPPUNIT_LIBS@
 
-commontest_LDFLAGS = 		-no-install
+silvia_pcsctest_LDFLAGS = 	-no-install
 
-TESTS = 			commontest
-
-EXTRA_DIST =			$(srcdir)/*.h

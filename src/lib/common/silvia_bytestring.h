@@ -40,6 +40,7 @@
 #include <string>
 #include <stdlib.h>
 #include <limits.h>
+#include <gmpxx.h>
 #include "config.h"
 
 #ifndef SIZE_T_MAX
@@ -59,6 +60,8 @@ public:
 	bytestring(const unsigned long longValue);
 
 	bytestring(const bytestring& in);
+	
+	bytestring(const mpz_class& mpz_val);
 
 	// Destructor
 	virtual ~bytestring() { }
@@ -75,6 +78,9 @@ public:
 
 	// Return the byte string
 	unsigned char* byte_str();
+	
+	// Return as GNU MP integer
+	mpz_class mpz_val();
 
 	// Return the const byte string
 	const unsigned char* const_byte_str() const;

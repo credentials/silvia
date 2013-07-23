@@ -1,25 +1,18 @@
-# $Id: Makefile.am 56 2013-07-04 17:39:15Z rijswijk $
+# $Id$
 
 MAINTAINERCLEANFILES = 		$(srcdir)/Makefile.in
 
 AM_CPPFLAGS = 			-I$(srcdir)/../common \
-				-I$(srcdir)/..
+				-I$(srcdir)/.. \
+				-I/usr/include/PCSC
 
-noinst_LTLIBRARIES =		libsilvia_common.la
+noinst_LTLIBRARIES =		libsilvia_pcsc.la
 
-libsilvia_common_la_SOURCES =	silvia_types.h \
-				silvia_types.cpp \
-				silvia_hash.h \
-				silvia_hash.cpp \
-				silvia_parameters.h \
-				silvia_parameters.cpp \
-				silvia_rand.h \
-				silvia_rand.cpp \
-				silvia_asn1.h \
-				silvia_asn1.cpp \
-				silvia_timer.h \
-				silvia_timer.cpp
+libsilvia_pcsc_la_SOURCES =	silvia_card.h \
+				silvia_card.cpp \
+				silvia_apdu.h \
+				silvia_apdu.cpp
 
-libsilvia_common_la_LIBADD =	
+libsilvia_pcsc_la_LIBADD =	
 
 SUBDIRS =			test

@@ -13,7 +13,8 @@ libsilvia_la_SOURCES =
 libsilvia_la_LIBADD =		issuer/libsilvia_issuer.la \
 				prover/libsilvia_prover.la \
 				verifier/libsilvia_verifier.la \
-				common/libsilvia_common.la
+				common/libsilvia_common.la \
+				pcsc/libsilvia_pcsc.la
 libsilvia_la_LDFLAGS =		-version-info @VERSION_INFO@ \
 				-avoid-version -module \
 				@OPENSSL_LIBS@
@@ -31,6 +32,7 @@ SUBDIRS = 			issuer \
 				prover \
 				verifier \
 				common \
+				pcsc \
 				test
 
 EXTRA_DIST =			$(srcdir)/*.h

@@ -39,6 +39,7 @@
 #include <string.h>
 #include "config.h"
 #include "silvia_bytestring.h"
+#include "silvia_macros.h"
 
 // Constructors
 bytestring::bytestring()
@@ -103,6 +104,18 @@ bytestring::bytestring(const unsigned long longValue)
 bytestring::bytestring(const bytestring& in)
 {
 	this->byteString = in.byteString;
+}
+
+bytestring::bytestring(const mpz_class& mpz_val)
+{
+	size_t count;
+	
+	unsigned char* byte_val = (unsigned char*) mpz_export(NULL, &count, 1, sizeof(unsigned char), 1, 0, _Z(mpz_val));
+	
+	byteString.resize(count);
+	memcpy(&byteString[0], byte_val, count);
+	
+	free(byte_val);
 }
 
 // Append data
@@ -189,6 +202,16 @@ unsigned char& bytestring::operator[](size_t pos)
 unsigned char* bytestring::byte_str()
 {
 	return &byteString[0];
+}
+
+// Return as GNU MP integer
+mpz_class bytestring::mpz_val()
+{
+	mpz_class rv;
+	
+	mpz_import(_Z(rv), byteString.size(), 1, sizeof(unsigned char), 1, 0, &byteString[0]);
+	
+	return rv;
 }
 
 // Return the const byte string

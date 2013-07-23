@@ -177,6 +177,12 @@ public:
 	 * @return a computable representation of the attribute
 	 */
 	virtual mpz_class& rep() { return attr_rep; }
+	
+	/**
+	 * Recreate the attribute from the representation
+	 * @param rep the representation
+	 */
+	virtual void from_rep(const mpz_class& rep) = 0;
 
 	/**
 	 * Equals
@@ -234,6 +240,12 @@ public:
 	 * @return the value of the attribute
 	 */
 	std::string get_value();
+	
+	/**
+	 * Recreate the attribute from the representation
+	 * @param rep the representation
+	 */
+	virtual void from_rep(const mpz_class& rep);
 
 private:
 	// String value
@@ -286,6 +298,12 @@ public:
 	 * @return the value of the attribute
 	 */
 	int get_value();
+	
+	/**
+	 * Recreate the attribute from the representation
+	 * @param rep the representation
+	 */
+	virtual void from_rep(const mpz_class& rep);
 };
 
 /**
@@ -322,6 +340,12 @@ public:
 	 * @return the value of the attribute
 	 */
 	bool get_value();
+	
+	/**
+	 * Recreate the attribute from the representation
+	 * @param rep the representation
+	 */
+	virtual void from_rep(const mpz_class& rep);
 };
 
 /**
