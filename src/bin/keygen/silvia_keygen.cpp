@@ -85,7 +85,7 @@ int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, size_t num_attrib
 	silvia_pub_key* pub_key;
 	silvia_priv_key* priv_key;
 	
-	silvia_issuer_keyfactory::i()->generate_keypair(num_attribs, &pub_key, &priv_key);
+	silvia_issuer_keyfactory::i()->generate_keypair(num_attribs + 1, &pub_key, &priv_key);
 	
 	printf("OK\n");
 	
