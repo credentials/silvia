@@ -16,7 +16,6 @@ libsilvia_la_LIBADD =		issuer/libsilvia_issuer.la \
 				common/libsilvia_common.la 
 
 libsilvia_la_LDFLAGS =		-version-info @VERSION_INFO@ \
-				-module \
 				@OPENSSL_LIBS@
 
 # Create a convenience library from all the other convenience libraries; this is
