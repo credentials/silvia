@@ -103,6 +103,23 @@ else
 fi
 AM_CONDITIONAL([BUILD_TESTS], [test "x${build_tests}" = "xyes"])
 
+# Build with support for parsing XML configuration files
+AC_ARG_WITH(
+	[xmlcfg],
+	AC_HELP_STRING([--with-xmlcfg], [Build with support for IRMA/Idemix XML configuration files; requires libxml]),
+	[build_xmlcfg="${withval}"],
+	[build_xmlcfg="yes"]
+)
+
+AC_MSG_CHECKING(if building with XML configuration file support)
+if test "x${build_xmlcfg}" = "xyes" ; then
+	AC_MSG_RESULT(yes)
+	PKG_CHECK_MODULES([XML], [libxml-2.0 >= 2.0], , AC_MSG_ERROR([libxml2 2.0 or newer not found]))
+else
+	AC_MSG_RESULT(no)
+fi
+AM_CONDITIONAL([BUILD_XMLCFG], [test "x${build_xmlcfg}" = "xyes"])
+
 # Check for libraries
 ACX_GMP
 
@@ -175,6 +192,8 @@ AC_CONFIG_FILES([
 	src/lib/verifier/test/Makefile
 	src/lib/pcsc/Makefile
 	src/lib/pcsc/test/Makefile
+	src/lib/xml/Makefile
+	src/lib/xml/test/Makefile
 ])
 
 AC_OUTPUT

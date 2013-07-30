@@ -39,6 +39,13 @@ libsilvia_la_LIBADD +=		pcsc/libsilvia_pcsc.la
 SUBDIRS +=			pcsc
 endif
 
+if BUILD_XMLCFG
+AM_CPPFLAGS +=			-I$(srcdir)/xml
+libsilvia_la_LIBADD +=		xml/libsilvia_xml.la
+libsilvia_la_LDFLAGS +=		@XML_LIBS@
+SUBDIRS +=			xml
+endif
+
 if BUILD_TESTS
 SUBDIRS +=			test
 endif
