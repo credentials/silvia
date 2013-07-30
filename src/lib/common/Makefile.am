@@ -24,4 +24,6 @@ libsilvia_common_la_SOURCES =	silvia_types.h \
 
 libsilvia_common_la_LIBADD =	
 
+if BUILD_TESTS
 SUBDIRS =			test
+endif

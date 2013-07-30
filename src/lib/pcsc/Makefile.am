@@ -15,4 +15,6 @@ libsilvia_pcsc_la_SOURCES =	silvia_card.h \
 
 libsilvia_pcsc_la_LIBADD =	
 
+if BUILD_TESTS
 SUBDIRS =			test
+endif

@@ -14,4 +14,6 @@ libsilvia_prover_la_SOURCES =	silvia_prover_credgen.h \
 
 libsilvia_prover_la_LIBADD =	
 
+if BUILD_TESTS
 SUBDIRS =			test
+endif

@@ -13,10 +13,10 @@ libsilvia_la_SOURCES =
 libsilvia_la_LIBADD =		issuer/libsilvia_issuer.la \
 				prover/libsilvia_prover.la \
 				verifier/libsilvia_verifier.la \
-				common/libsilvia_common.la \
-				pcsc/libsilvia_pcsc.la
+				common/libsilvia_common.la 
+
 libsilvia_la_LDFLAGS =		-version-info @VERSION_INFO@ \
-				-avoid-version -module \
+				-module \
 				@OPENSSL_LIBS@
 
 # Create a convenience library from all the other convenience libraries; this is
@@ -31,8 +31,18 @@ libsilvia_convarch_la_LIBADD =	$(libsilvia_la_LIBADD)
 SUBDIRS = 			issuer \
 				prover \
 				verifier \
-				common \
-				pcsc \
-				test
+				common
+
+# Process optional components
+if BUILD_PCSC
+AM_CPPFLAGS += 			-I$(srcdir)/pcsc
+libsilvia_la_LIBADD +=		pcsc/libsilvia_pcsc.la
+SUBDIRS +=			pcsc
+endif
+
+if BUILD_TESTS
+SUBDIRS +=			test
+endif
 
 EXTRA_DIST =			$(srcdir)/*.h
+

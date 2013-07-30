@@ -12,4 +12,6 @@ libsilvia_verifier_la_SOURCES =	silvia_verifier.h \
 
 libsilvia_verifier_la_LIBADD =	
 
+if BUILD_TESTS
 SUBDIRS =			test
+endif

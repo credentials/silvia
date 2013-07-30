@@ -54,6 +54,7 @@ ACX_STRICT
 # Libtool settings
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
+PKG_PROG_PKG_CONFIG
 
 # Log level
 AC_ARG_WITH(
@@ -63,18 +64,50 @@ AC_ARG_WITH(
 	[SILVIA_LOGLEVEL=3]
 )
 
+################################################################################
+# Optional components
+################################################################################
+
+# Direct PC/SC support
+AC_ARG_WITH(
+	[pcsc],
+	AC_HELP_STRING([--with-pcsc], [Build the library with built-in PC/SC smart card support; requires PC/SC lite]),
+	[build_pcsc="${withval}"],
+	[build_pcsc="yes"]
+)
+
+AC_MSG_CHECKING(if building with PC/SC support)
+if test "x${build_pcsc}" = "xyes" ; then
+	AC_MSG_RESULT(yes)
+	PKG_CHECK_MODULES([PCSC], [libpcsclite >= 1.4.0], , AC_MSG_ERROR([PC/SC lite 1.4.0 or newer not found]))
+	AC_CHECK_LIB(pcsclite, SCardConnect)
+else
+	AC_MSG_RESULT(no)
+fi
+AM_CONDITIONAL([BUILD_PCSC], [test "x${build_pcsc}" = "xyes"])
+
+# Build unit test cases
+AC_ARG_WITH(
+	[tests],
+	AC_HELP_STRING([--with-tests], [Build the unit tests (use 'make check' to run); requires CPPUnit]),
+	[build_tests="${withval}"],
+	[build_tests="yes"]
+)
+
+AC_MSG_CHECKING(if building with unit tests)
+if test "x${build_tests}" = "xyes" ; then
+	AC_MSG_RESULT(yes)
+	PKG_CHECK_MODULES([CPPUNIT], [cppunit >= 1.10.0], , AC_MSG_ERROR([CppUnit 1.10.0 or newer not found]))
+else
+	AC_MSG_RESULT(no)
+fi
+AM_CONDITIONAL([BUILD_TESTS], [test "x${build_tests}" = "xyes"])
+
 # Check for libraries
-ACX_OPENSSL(0,9,8)
 ACX_GMP
-AM_PATH_CPPUNIT(1.10.0, , AC_MSG_ERROR([libcppunit 1.10.0 or newer not found]))
 
-PKG_CHECK_MODULES([LIBCRYPTO], [libcrypto >= 0.9.8], , AC_MSG_ERROR([OpenSSL cryptography library 0.9.8 or newer not found]))
+PKG_CHECK_MODULES([OPENSSL], [libcrypto >= 0.9.8], , AC_MSG_ERROR([OpenSSL cryptography library 0.9.8 or newer not found]))
 AC_CHECK_LIB(crypto, BN_init)
-
-PKG_CHECK_MODULES([PCSC], [libpcsclite >= 1.4.0], , AC_MSG_ERROR([PC/SC lite 1.4.0 or newer not found]))
-AC_CHECK_LIB(pcsclite, SCardConnect)
-
-PKG_CHECK_MODULES([CPPUNIT], [cppunit >= 1.10.0], , AC_MSG_ERROR([CppUnit 1.10.0 or newer not found]))
 
 #PKG_CHECK_MODULES([LIBCONFIG], [libconfig >= 1.3.2],, AC_MSG_ERROR([libconfig 1.3.2 or newer not found]))
 
