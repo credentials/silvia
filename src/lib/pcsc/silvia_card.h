@@ -73,6 +73,14 @@ public:
 	virtual bool transmit(bytestring APDU, bytestring& data, unsigned short& sw) = 0;
 	
 	/**
+	 * Transmit an APDU and receive return data
+	 * @param apdu The APDU to transmit
+	 * @param data_sw The return data including the status word
+	 * @return true if the APDU exchange completed successfully
+	 */
+	virtual bool transmit(bytestring APDU, bytestring& data_sw) = 0;
+	
+	/**
 	 * Get the card reader name in which the card resides
 	 * @return the card reader name of the reader containing the card
 	 */
@@ -122,6 +130,14 @@ public:
 	 * @return true if the APDU exchange completed successfully
 	 */
 	virtual bool transmit(bytestring APDU, bytestring& data, unsigned short& sw);
+	
+	/**
+	 * Transmit an APDU and receive return data
+	 * @param apdu The APDU to transmit
+	 * @param data_sw The return data including the status word
+	 * @return true if the APDU exchange completed successfully
+	 */
+	virtual bool transmit(bytestring APDU, bytestring& data_sw);
 	
 	/**
 	 * Get the card reader name in which the card resides

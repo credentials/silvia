@@ -93,9 +93,24 @@ bool silvia_card::status()
 	
 bool silvia_card::transmit(bytestring APDU, bytestring& data, unsigned short& sw)
 {
+	if (!transmit(APDU, data))
+	{
+		return false;
+	}
+	
+	sw = data[data.size() - 2] << 8;
+	sw += data[data.size() - 1];
+	
+	data.resize(data.size() - 2);
+	
+	return true;
+}
+
+bool silvia_card::transmit(bytestring APDU, bytestring& data_sw)
+{
 	if (!connected) return false;
 	
-	data.resize(65536);
+	data_sw.resize(65536);
 	DWORD out_len = 65536;
 	SCARD_IO_REQUEST recv_req;
 		
@@ -105,7 +120,7 @@ bool silvia_card::transmit(bytestring APDU, bytestring& data, unsigned short& sw
 		APDU.byte_str(), 
 		APDU.size(), 
 		&recv_req,
-		data.byte_str(),
+		data_sw.byte_str(),
 		&out_len);
 		
 	if (rv != SCARD_S_SUCCESS)
@@ -113,17 +128,12 @@ bool silvia_card::transmit(bytestring APDU, bytestring& data, unsigned short& sw
 		return false;
 	}
 	
-	data.resize(out_len);
+	data_sw.resize(out_len);
 	
-	if (data.size() < 2)
+	if (data_sw.size() < 2)
 	{
 		return false;
 	}
-	
-	sw = data[data.size() - 2] << 8;
-	sw += data[data.size() - 1];
-	
-	data.resize(out_len - 2);
 	
 	return true;
 }

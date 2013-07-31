@@ -10,7 +10,9 @@ noinst_LTLIBRARIES =		libsilvia_verifier.la
 libsilvia_verifier_la_SOURCES =	silvia_verifier.h \
 				silvia_verifier.cpp \
 				silvia_verifier_spec.h \
-				silvia_verifier_spec.cpp
+				silvia_verifier_spec.cpp \
+				silvia_irma_verifier.h \
+				silvia_irma_verifier.cpp
 
 libsilvia_verifier_la_LIBADD =	
 

@@ -20,7 +20,9 @@ libsilvia_common_la_SOURCES =	silvia_types.h \
 				silvia_timer.h \
 				silvia_timer.cpp \
 				silvia_bytestring.h \
-				silvia_bytestring.cpp
+				silvia_bytestring.cpp \
+				silvia_apdu.h \
+				silvia_apdu.cpp
 
 libsilvia_common_la_LIBADD =	
 
