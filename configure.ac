@@ -180,6 +180,7 @@ AC_CONFIG_FILES([
 	src/Makefile
 	src/bin/Makefile
 	src/bin/keygen/Makefile
+	src/bin/verifier/Makefile
 	src/lib/Makefile
 	src/lib/test/Makefile
 	src/lib/common/Makefile
