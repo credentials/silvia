@@ -43,6 +43,11 @@
 #include <iostream>
 #include <unistd.h>
 #include <stdio.h>
+#include <time.h>
+
+const char* weekday[7] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+
+const char* month[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
 void set_parameters()
 {
@@ -160,6 +165,22 @@ bool verify_pin(silvia_card* card)
 	return false;
 }
 
+bytestring bs2str(const bytestring& in)
+{
+	bytestring out = in;
+	
+	// Strip leading 00's
+	while ((out.size() > 0) && (out[0] == 0x00))
+	{
+		out = out.substr(1);
+	}
+	
+	// Append null-termination
+	out += 0x00;
+	
+	return out;
+}
+
 void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::string issuer_pubkey, bool force_pin)
 {
 	silvia_card* card = NULL;
@@ -257,6 +278,12 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 					break;
 				}
 			}
+			else if (result.substr(result.size() - 2) != "9000")
+			{
+				printf("(0x%s) ", result.substr(result.size() - 2).hex_str().c_str());
+				comm_ok = false;
+				break;
+			}
 			
 			results.push_back(result);
 		}
@@ -271,6 +298,43 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 			if (verifier.submit_and_verify(results, revealed))
 			{
 				printf("OK\n");
+				
+				printf("\n");
+				
+				if (revealed.size() > 0)
+				{
+					printf("Revealed attributes:\n\n");
+					
+					printf("Attribute           |Value\n");
+					printf("--------------------+-----------------------------------------------------------\n");
+					
+					std::vector<std::pair<std::string, bytestring> >::iterator i = revealed.begin();
+					
+					// Check if the first attribute is "expires"
+					if (i->first == "expires")
+					{
+						time_t expires = (i->second[i->second.size() - 2] << 8) + (i->second[i->second.size() - 1]);
+						expires *= 86400; // convert days to seconds
+						
+						struct tm* date = gmtime(&expires);
+						
+						printf("%-20s|%s %s %d %d\n", i->first.c_str(),
+							weekday[date->tm_wday],
+							month[date->tm_mon],
+							date->tm_mday,
+							date->tm_year + 1900);
+						
+						i++;
+					}
+					
+					// Assume the other attributes are strings
+					for (; i != revealed.end(); i++)
+					{
+						printf("%-20s|%-59s\n", i->first.c_str(), (const char*) bs2str(i->second).byte_str());
+					}
+					
+					printf("\n");
+				}
 			}
 			else
 			{

@@ -87,15 +87,16 @@ std::vector<bytestring> silvia_irma_verifier::get_proof_commands()
 	
 	// Build proof specification
 	unsigned short D_val = 0;
+	unsigned short D_mask = 0x02; // take into account that we never reveal the master secret
 	
 	for (std::vector<bool>::iterator i = vspec->get_D().begin(); i != vspec->get_D().end(); i++)
 	{
-		D_val = D_val << 1;
-		
 		if ((*i) == true)
 		{
-			D_val += 1;
+			D_val += D_mask;
 		}
+		
+		D_mask = D_mask << 1;
 	}
 	
 	bytestring D = (unsigned long) D_val;
