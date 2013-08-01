@@ -4,7 +4,7 @@ MAINTAINERCLEANFILES = 		$(srcdir)/Makefile.in
 
 AM_CPPFLAGS = 			-I$(srcdir)/../common \
 				-I$(srcdir)/.. \
-				-I/usr/include/PCSC
+				@PCSC_CFLAGS@
 
 noinst_LTLIBRARIES =		libsilvia_pcsc.la
 

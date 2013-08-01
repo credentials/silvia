@@ -79,8 +79,18 @@ AC_ARG_WITH(
 AC_MSG_CHECKING(if building with PC/SC support)
 if test "x${build_pcsc}" = "xyes" ; then
 	AC_MSG_RESULT(yes)
-	PKG_CHECK_MODULES([PCSC], [libpcsclite >= 1.4.0], , AC_MSG_ERROR([PC/SC lite 1.4.0 or newer not found]))
-	AC_CHECK_LIB(pcsclite, SCardConnect)
+	case "${host}" in
+		*-*-darwin*)
+			AC_CHECK_HEADER(/System/Library/Frameworks/PCSC.framework/Headers/winscard.h, , AC_MSG_ERROR([Mac OS X PC/SC framework required]))
+			AC_CHECK_FILE(/System/Library/Frameworks/PCSC.framework/PCSC, , AC_MSG_ERROR([Mac OS X PC/SC framework required]))
+			PCSC_CFLAGS="-I/System/Library/Frameworks/PCSC.framework/Headers"
+			PCSC_LIBS="-framework PCSC"
+			;;
+		*)
+			PKG_CHECK_MODULES([PCSC], [libpcsclite >= 1.4.0], , AC_MSG_ERROR([PC/SC lite 1.4.0 or newer not found]))
+			AC_CHECK_LIB(pcsclite, SCardConnect)
+			;;
+	esac
 else
 	AC_MSG_RESULT(no)
 fi

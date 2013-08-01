@@ -37,6 +37,7 @@ if BUILD_PCSC
 AM_CPPFLAGS += 			-I$(srcdir)/pcsc
 libsilvia_la_LIBADD +=		pcsc/libsilvia_pcsc.la
 SUBDIRS +=			pcsc
+libsilvia_la_LDFLAGS +=		@PCSC_LIBS@
 endif
 
 if BUILD_XMLCFG
