@@ -1,4 +1,4 @@
-/* $Id: silvia_verifier.h 55 2013-07-04 14:19:14Z rijswijk $ */
+/* $Id$ */
 
 /*
  * Copyright (c) 2013 Roland van Rijswijk-Deij
@@ -27,80 +27,62 @@
  */
 
 /*****************************************************************************
- silvia_verifier.h
+ silvia_verifier_spec.h
 
- Credential proof verifier
+ Verifier specification
  *****************************************************************************/
-
-#ifndef _SILVIA_VERIFIER_H
-#define _SILVIA_VERIFIER_H
 
 #include "config.h"
 #include <gmpxx.h>
 #include "silvia_types.h"
+#include "silvia_verifier_spec.h"
 #include <vector>
+#include <assert.h>
 
-/**
- * Verifier class
- */
- 
-class silvia_verifier
+silvia_verifier_specification::silvia_verifier_specification
+(
+	std::string verifier_name,
+	std::string short_msg,
+	unsigned int verifier_id,
+	unsigned short credential_id,
+	std::vector<std::string> attribute_names,
+	std::vector<bool> D
+)
 {
-public:
-	/**
-	 * Constructor
-	 * @param pubkey the issuer public key
-	 */
-	silvia_verifier(silvia_pub_key* pubkey);
+	this->verifier_name = verifier_name;
+	this->short_msg = short_msg;
+	this->verifier_id = verifier_id;
+	this->credential_id = credential_id;
+	this->attribute_names = attribute_names;
+	this->D = D;
+}
 	
-	/**
-	 * Get the verifier nonce
-	 * @param ext_n1 externally supplied value for n1 (for testing only)
-	 * @return the verifier nonce n1
-	 */
-	mpz_class get_verifier_nonce(mpz_class* ext_n1 = NULL);
-	
-	/**
-	 * Verify the supplied proof
-	 * @param D which attributes to hide and which to reveal
-	 * @param context the shared context
-	 * @param c the proof hash c
-	 * @param A_prime the proof A' value
-	 * @param e_hat the proof e^ value
-	 * @param v_prime_hat the proof v'^ value
-	 * @param a_i_hat the proof's a_i^ values (hidden attribute ZKP values)
-	 * @param a_i the proof's revealed attributes
-	 * @return true if the proof is valid
-	 */
-	bool verify
-	(
-		std::vector<bool> D,
-		mpz_class context,
-		mpz_class c,
-		mpz_class A_prime,
-		mpz_class e_hat,
-		mpz_class v_prime_hat,
-		std::vector<mpz_class> a_i_hat,
-		std::vector<silvia_attribute*> a_i
-	);
-	
-	/**
-	 * Reset the verifier
-	 */
-	void reset();
+std::string silvia_verifier_specification::get_verifier_name()
+{
+	return verifier_name;
+}
 
-private:
-	// State
-	silvia_pub_key* pubkey;
-	mpz_class n1;
-	
-	enum
-	{
-		VERIFIER_START,
-		VERIFIER_NONCE
-	}
-	verifier_state;
-};
+std::string silvia_verifier_specification::get_short_msg()
+{
+	return short_msg;
+}
 
-#endif // !_SILVIA_VERIFIER_H
+unsigned int silvia_verifier_specification::get_verifier_id()
+{
+	return verifier_id;
+}
 
+unsigned short silvia_verifier_specification::get_credential_id()
+{
+	return credential_id;
+}
+
+std::vector<std::string>& silvia_verifier_specification::get_attribute_names()
+{
+	return attribute_names;
+}
+
+std::vector<bool>& silvia_verifier_specification::get_D()
+{
+	return D;
+}

@@ -1,4 +1,4 @@
-/* $Id: silvia_verifier.h 55 2013-07-04 14:19:14Z rijswijk $ */
+/* $Id$ */
 
 /*
  * Copyright (c) 2013 Roland van Rijswijk-Deij
@@ -27,80 +27,75 @@
  */
 
 /*****************************************************************************
- silvia_verifier.h
+ silvia_irma_verifier.h
 
- Credential proof verifier
+ Credential proof verifier for IRMA cards
  *****************************************************************************/
 
-#ifndef _SILVIA_VERIFIER_H
-#define _SILVIA_VERIFIER_H
+#ifndef _SILVIA_IRMA_VERIFIER_H
+#define _SILVIA_IRMA_VERIFIER_H
 
 #include "config.h"
 #include <gmpxx.h>
 #include "silvia_types.h"
+#include "silvia_verifier.h"
+#include "silvia_bytestring.h"
+#include "silvia_verifier_spec.h"
 #include <vector>
+#include <utility>
 
 /**
- * Verifier class
+ * IRMA verifier class
  */
  
-class silvia_verifier
+class silvia_irma_verifier
 {
 public:
 	/**
 	 * Constructor
 	 * @param pubkey the issuer public key
+	 * @param vspec the verifier specification
 	 */
-	silvia_verifier(silvia_pub_key* pubkey);
+	silvia_irma_verifier(silvia_pub_key* pubkey, silvia_verifier_specification* vspec);
 	
 	/**
-	 * Get the verifier nonce
-	 * @param ext_n1 externally supplied value for n1 (for testing only)
-	 * @return the verifier nonce n1
+	 * Destructor
 	 */
-	mpz_class get_verifier_nonce(mpz_class* ext_n1 = NULL);
+	~silvia_irma_verifier();
 	
 	/**
-	 * Verify the supplied proof
-	 * @param D which attributes to hide and which to reveal
-	 * @param context the shared context
-	 * @param c the proof hash c
-	 * @param A_prime the proof A' value
-	 * @param e_hat the proof e^ value
-	 * @param v_prime_hat the proof v'^ value
-	 * @param a_i_hat the proof's a_i^ values (hidden attribute ZKP values)
-	 * @param a_i the proof's revealed attributes
-	 * @return true if the proof is valid
+	 * Get the command sequence for generating a proof
+	 * @return the command sequence for generating a proof (empty if in the wrong state)
 	 */
-	bool verify
-	(
-		std::vector<bool> D,
-		mpz_class context,
-		mpz_class c,
-		mpz_class A_prime,
-		mpz_class e_hat,
-		mpz_class v_prime_hat,
-		std::vector<mpz_class> a_i_hat,
-		std::vector<silvia_attribute*> a_i
-	);
+	std::vector<bytestring> get_proof_commands();
 	
 	/**
-	 * Reset the verifier
+	 * Submit and verify the results from the card
+	 * @param results the return data from the card
+	 * @param revealed the revealed attributes as pairs of (id, value)
+	 * @return true if the proof verified correctly, false otherwise
 	 */
-	void reset();
+	bool submit_and_verify(std::vector<bytestring> results, std::vector<std::pair<std::string, bytestring> >& revealed);
+	
+	/**
+	 * Abort a verification (call if card processing fails); discards internal state
+	 */
+	void abort();
 
 private:
-	// State
+	// Internal state
 	silvia_pub_key* pubkey;
-	mpz_class n1;
+	silvia_verifier* verifier;
+	silvia_verifier_specification* vspec;
+	bytestring context;
 	
 	enum
 	{
-		VERIFIER_START,
-		VERIFIER_NONCE
+		IRMA_VERIFIER_START,
+		IRMA_VERIFIER_WAIT_ANSWER
 	}
-	verifier_state;
+	irma_verifier_state;
 };
 
-#endif // !_SILVIA_VERIFIER_H
+#endif // !_SILVIA_IRMA_VERIFIER_H
 

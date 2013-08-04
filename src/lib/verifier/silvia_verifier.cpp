@@ -53,6 +53,8 @@ silvia_verifier::silvia_verifier(silvia_pub_key* pubkey)
 
 mpz_class silvia_verifier::get_verifier_nonce(mpz_class* ext_n1 /* = NULL */)
 {
+	assert(verifier_state == VERIFIER_START);
+	
 	verifier_state = VERIFIER_NONCE;
 	
 	if (ext_n1 == NULL)
@@ -219,4 +221,9 @@ bool silvia_verifier::verify
 	mpz_class c_hat = h.final();
 	
 	return (c == c_hat);
+}
+
+void silvia_verifier::reset()
+{
+	verifier_state = VERIFIER_START;
 }

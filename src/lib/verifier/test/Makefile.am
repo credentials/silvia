@@ -13,7 +13,9 @@ check_PROGRAMS =		verifiertest
 
 verifiertest_SOURCES =		verifiertest.cpp \
 				verifytests.h \
-				verifytests.cpp
+				verifytests.cpp \
+				irma_verifytests.h \
+				irma_verifytests.cpp
 
 verifiertest_LDADD =		../../libsilvia_convarch.la @CPPUNIT_LIBS@ @OPENSSL_LIBS@
 

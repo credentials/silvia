@@ -1,4 +1,4 @@
-/* $Id: silvia_verifier.h 55 2013-07-04 14:19:14Z rijswijk $ */
+/* $Id$ */
 
 /*
  * Copyright (c) 2013 Roland van Rijswijk-Deij
@@ -27,80 +27,51 @@
  */
 
 /*****************************************************************************
- silvia_verifier.h
+ silvia_idemix_xmlreader.h
 
- Credential proof verifier
+ XML reader that will read and parse the XML file types that are relevant for
+ Silvia and the IRMA project
  *****************************************************************************/
 
-#ifndef _SILVIA_VERIFIER_H
-#define _SILVIA_VERIFIER_H
+#ifndef _SILVIA_IDEMIX_XMLREADER_H
+#define _SILVIA_IDEMIX_XMLREADER_H
 
 #include "config.h"
 #include <gmpxx.h>
 #include "silvia_types.h"
 #include <vector>
+#include <memory>
 
 /**
- * Verifier class
+ * Idemix XML reader class
  */
- 
-class silvia_verifier
+class silvia_idemix_xmlreader
 {
 public:
 	/**
-	 * Constructor
-	 * @param pubkey the issuer public key
+	 * Get the one-and-only instance of the Idemix XML reader object
+	 * @return the one-and-only instance of the Idemix XML reader object
 	 */
-	silvia_verifier(silvia_pub_key* pubkey);
+	static silvia_idemix_xmlreader* i();
 	
 	/**
-	 * Get the verifier nonce
-	 * @param ext_n1 externally supplied value for n1 (for testing only)
-	 * @return the verifier nonce n1
+	 * Retrieve a public key object from an Idemix public key XML file
+	 * @param file_name the name of the XML file
+	 * @return a new public key object or NULL if reading/parsing failed
 	 */
-	mpz_class get_verifier_nonce(mpz_class* ext_n1 = NULL);
+	silvia_pub_key* read_idemix_pubkey(const std::string file_name);
 	
 	/**
-	 * Verify the supplied proof
-	 * @param D which attributes to hide and which to reveal
-	 * @param context the shared context
-	 * @param c the proof hash c
-	 * @param A_prime the proof A' value
-	 * @param e_hat the proof e^ value
-	 * @param v_prime_hat the proof v'^ value
-	 * @param a_i_hat the proof's a_i^ values (hidden attribute ZKP values)
-	 * @param a_i the proof's revealed attributes
-	 * @return true if the proof is valid
+	 * Retrieve a private key object from an Idemix public key XML file
+	 * @param file_name the name of the XML file
+	 * @return a new private key object or NULL if reading/parsing failed
 	 */
-	bool verify
-	(
-		std::vector<bool> D,
-		mpz_class context,
-		mpz_class c,
-		mpz_class A_prime,
-		mpz_class e_hat,
-		mpz_class v_prime_hat,
-		std::vector<mpz_class> a_i_hat,
-		std::vector<silvia_attribute*> a_i
-	);
+	silvia_priv_key* read_idemix_privkey(const std::string file_name);
 	
-	/**
-	 * Reset the verifier
-	 */
-	void reset();
-
 private:
-	// State
-	silvia_pub_key* pubkey;
-	mpz_class n1;
-	
-	enum
-	{
-		VERIFIER_START,
-		VERIFIER_NONCE
-	}
-	verifier_state;
+	// The one-and-only instance
+	static std::auto_ptr<silvia_idemix_xmlreader> _i;
 };
 
-#endif // !_SILVIA_VERIFIER_H
+#endif // !_SILVIA_IDEMIX_XMLREADER_H
 

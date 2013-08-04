@@ -54,6 +54,7 @@ ACX_STRICT
 # Libtool settings
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
+PKG_PROG_PKG_CONFIG
 
 # Log level
 AC_ARG_WITH(
@@ -63,18 +64,77 @@ AC_ARG_WITH(
 	[SILVIA_LOGLEVEL=3]
 )
 
+################################################################################
+# Optional components
+################################################################################
+
+# Direct PC/SC support
+AC_ARG_WITH(
+	[pcsc],
+	AC_HELP_STRING([--with-pcsc], [Build the library with built-in PC/SC smart card support; requires PC/SC lite]),
+	[build_pcsc="${withval}"],
+	[build_pcsc="yes"]
+)
+
+AC_MSG_CHECKING(if building with PC/SC support)
+if test "x${build_pcsc}" = "xyes" ; then
+	AC_MSG_RESULT(yes)
+	case "${host}" in
+		*-*-darwin*)
+			AC_CHECK_HEADER(/System/Library/Frameworks/PCSC.framework/Headers/winscard.h, , AC_MSG_ERROR([Mac OS X PC/SC framework required]))
+			AC_CHECK_FILE(/System/Library/Frameworks/PCSC.framework/PCSC, , AC_MSG_ERROR([Mac OS X PC/SC framework required]))
+			PCSC_CFLAGS="-I/System/Library/Frameworks/PCSC.framework/Headers"
+			PCSC_LIBS="-framework PCSC"
+			;;
+		*)
+			PKG_CHECK_MODULES([PCSC], [libpcsclite >= 1.4.0], , AC_MSG_ERROR([PC/SC lite 1.4.0 or newer not found]))
+			AC_CHECK_LIB(pcsclite, SCardConnect)
+			;;
+	esac
+else
+	AC_MSG_RESULT(no)
+fi
+AM_CONDITIONAL([BUILD_PCSC], [test "x${build_pcsc}" = "xyes"])
+
+# Build unit test cases
+AC_ARG_WITH(
+	[tests],
+	AC_HELP_STRING([--with-tests], [Build the unit tests (use 'make check' to run); requires CPPUnit]),
+	[build_tests="${withval}"],
+	[build_tests="yes"]
+)
+
+AC_MSG_CHECKING(if building with unit tests)
+if test "x${build_tests}" = "xyes" ; then
+	AC_MSG_RESULT(yes)
+	PKG_CHECK_MODULES([CPPUNIT], [cppunit >= 1.10.0], , AC_MSG_ERROR([CppUnit 1.10.0 or newer not found]))
+else
+	AC_MSG_RESULT(no)
+fi
+AM_CONDITIONAL([BUILD_TESTS], [test "x${build_tests}" = "xyes"])
+
+# Build with support for parsing XML configuration files
+AC_ARG_WITH(
+	[xmlcfg],
+	AC_HELP_STRING([--with-xmlcfg], [Build with support for IRMA/Idemix XML configuration files; requires libxml]),
+	[build_xmlcfg="${withval}"],
+	[build_xmlcfg="yes"]
+)
+
+AC_MSG_CHECKING(if building with XML configuration file support)
+if test "x${build_xmlcfg}" = "xyes" ; then
+	AC_MSG_RESULT(yes)
+	PKG_CHECK_MODULES([XML], [libxml-2.0 >= 2.0], , AC_MSG_ERROR([libxml2 2.0 or newer not found]))
+else
+	AC_MSG_RESULT(no)
+fi
+AM_CONDITIONAL([BUILD_XMLCFG], [test "x${build_xmlcfg}" = "xyes"])
+
 # Check for libraries
-ACX_OPENSSL(0,9,8)
 ACX_GMP
-AM_PATH_CPPUNIT(1.10.0, , AC_MSG_ERROR([libcppunit 1.10.0 or newer not found]))
 
-PKG_CHECK_MODULES([LIBCRYPTO], [libcrypto >= 0.9.8], , AC_MSG_ERROR([OpenSSL cryptography library 0.9.8 or newer not found]))
+PKG_CHECK_MODULES([OPENSSL], [libcrypto >= 0.9.8], , AC_MSG_ERROR([OpenSSL cryptography library 0.9.8 or newer not found]))
 AC_CHECK_LIB(crypto, BN_init)
-
-PKG_CHECK_MODULES([PCSC], [libpcsclite >= 1.4.0], , AC_MSG_ERROR([PC/SC lite 1.4.0 or newer not found]))
-AC_CHECK_LIB(pcsclite, SCardConnect)
-
-PKG_CHECK_MODULES([CPPUNIT], [cppunit >= 1.10.0], , AC_MSG_ERROR([CppUnit 1.10.0 or newer not found]))
 
 #PKG_CHECK_MODULES([LIBCONFIG], [libconfig >= 1.3.2],, AC_MSG_ERROR([libconfig 1.3.2 or newer not found]))
 
@@ -130,6 +190,7 @@ AC_CONFIG_FILES([
 	src/Makefile
 	src/bin/Makefile
 	src/bin/keygen/Makefile
+	src/bin/verifier/Makefile
 	src/lib/Makefile
 	src/lib/test/Makefile
 	src/lib/common/Makefile
@@ -142,6 +203,8 @@ AC_CONFIG_FILES([
 	src/lib/verifier/test/Makefile
 	src/lib/pcsc/Makefile
 	src/lib/pcsc/test/Makefile
+	src/lib/xml/Makefile
+	src/lib/xml/test/Makefile
 ])
 
 AC_OUTPUT

@@ -1,4 +1,4 @@
-/* $Id: silvia_verifier.h 55 2013-07-04 14:19:14Z rijswijk $ */
+/* $Id$ */
 
 /*
  * Copyright (c) 2013 Roland van Rijswijk-Deij
@@ -27,80 +27,47 @@
  */
 
 /*****************************************************************************
- silvia_verifier.h
+ silvia_irma_xmlreader.h
 
- Credential proof verifier
+ XML reader that will read and parse the XML file types that are relevant for
+ Silvia and the IRMA project
  *****************************************************************************/
 
-#ifndef _SILVIA_VERIFIER_H
-#define _SILVIA_VERIFIER_H
+#ifndef _SILVIA_IRMA_XMLREADER_H
+#define _SILVIA_IRMA_XMLREADER_H
 
 #include "config.h"
 #include <gmpxx.h>
 #include "silvia_types.h"
+#include "silvia_verifier_spec.h"
 #include <vector>
+#include <memory>
 
 /**
- * Verifier class
+ * IRMA XML reader class
  */
- 
-class silvia_verifier
+class silvia_irma_xmlreader
 {
 public:
 	/**
-	 * Constructor
-	 * @param pubkey the issuer public key
+	 * Get the one-and-only instance of the IRMA XML reader object
+	 * @return the one-and-only instance of the IRMA XML reader object
 	 */
-	silvia_verifier(silvia_pub_key* pubkey);
+	static silvia_irma_xmlreader* i();
 	
 	/**
-	 * Get the verifier nonce
-	 * @param ext_n1 externally supplied value for n1 (for testing only)
-	 * @return the verifier nonce n1
+	 * Reads issuer and verifier descriptions to create a verifier
+	 * specification that can be used by Silvia
+	 * @param id_file_name File name of the issuer description file
+	 * @param vd_file_name File name of the verifier description file
+	 * @return A new verifier specification object or NULL if reading/parsing of one of the files failed
 	 */
-	mpz_class get_verifier_nonce(mpz_class* ext_n1 = NULL);
+	silvia_verifier_specification* read_verifier_spec(const std::string id_file_name, const std::string vd_file_name);
 	
-	/**
-	 * Verify the supplied proof
-	 * @param D which attributes to hide and which to reveal
-	 * @param context the shared context
-	 * @param c the proof hash c
-	 * @param A_prime the proof A' value
-	 * @param e_hat the proof e^ value
-	 * @param v_prime_hat the proof v'^ value
-	 * @param a_i_hat the proof's a_i^ values (hidden attribute ZKP values)
-	 * @param a_i the proof's revealed attributes
-	 * @return true if the proof is valid
-	 */
-	bool verify
-	(
-		std::vector<bool> D,
-		mpz_class context,
-		mpz_class c,
-		mpz_class A_prime,
-		mpz_class e_hat,
-		mpz_class v_prime_hat,
-		std::vector<mpz_class> a_i_hat,
-		std::vector<silvia_attribute*> a_i
-	);
-	
-	/**
-	 * Reset the verifier
-	 */
-	void reset();
-
 private:
-	// State
-	silvia_pub_key* pubkey;
-	mpz_class n1;
-	
-	enum
-	{
-		VERIFIER_START,
-		VERIFIER_NONCE
-	}
-	verifier_state;
+	// The one-and-only instance
+	static std::auto_ptr<silvia_irma_xmlreader> _i;
 };
 
-#endif // !_SILVIA_VERIFIER_H
+#endif // !_SILVIA_IRMA_XMLREADER_H
 

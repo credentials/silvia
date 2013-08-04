@@ -1,4 +1,4 @@
-/* $Id: silvia_verifier.h 55 2013-07-04 14:19:14Z rijswijk $ */
+/* $Id$ */
 
 /*
  * Copyright (c) 2013 Roland van Rijswijk-Deij
@@ -27,80 +27,28 @@
  */
 
 /*****************************************************************************
- silvia_verifier.h
+ irma_verifytests.h
 
- Credential proof verifier
+ Tests credential proof verification APDU command sequence generation
  *****************************************************************************/
 
-#ifndef _SILVIA_VERIFIER_H
-#define _SILVIA_VERIFIER_H
+#ifndef _SILVIA_ISSUER_IRMA_VERIFYTESTS_H
+#define _SILVIA_ISSUER_IRMA_VERIFYTESTS_H
 
-#include "config.h"
-#include <gmpxx.h>
-#include "silvia_types.h"
-#include <vector>
+#include <cppunit/extensions/HelperMacros.h>
 
-/**
- * Verifier class
- */
- 
-class silvia_verifier
+class irma_verify_tests : public CppUnit::TestFixture
 {
-public:
-	/**
-	 * Constructor
-	 * @param pubkey the issuer public key
-	 */
-	silvia_verifier(silvia_pub_key* pubkey);
-	
-	/**
-	 * Get the verifier nonce
-	 * @param ext_n1 externally supplied value for n1 (for testing only)
-	 * @return the verifier nonce n1
-	 */
-	mpz_class get_verifier_nonce(mpz_class* ext_n1 = NULL);
-	
-	/**
-	 * Verify the supplied proof
-	 * @param D which attributes to hide and which to reveal
-	 * @param context the shared context
-	 * @param c the proof hash c
-	 * @param A_prime the proof A' value
-	 * @param e_hat the proof e^ value
-	 * @param v_prime_hat the proof v'^ value
-	 * @param a_i_hat the proof's a_i^ values (hidden attribute ZKP values)
-	 * @param a_i the proof's revealed attributes
-	 * @return true if the proof is valid
-	 */
-	bool verify
-	(
-		std::vector<bool> D,
-		mpz_class context,
-		mpz_class c,
-		mpz_class A_prime,
-		mpz_class e_hat,
-		mpz_class v_prime_hat,
-		std::vector<mpz_class> a_i_hat,
-		std::vector<silvia_attribute*> a_i
-	);
-	
-	/**
-	 * Reset the verifier
-	 */
-	void reset();
+	CPPUNIT_TEST_SUITE(irma_verify_tests);
+	CPPUNIT_TEST(test_verify_irma_proof_cmdgen);
+	CPPUNIT_TEST_SUITE_END();
 
-private:
-	// State
-	silvia_pub_key* pubkey;
-	mpz_class n1;
-	
-	enum
-	{
-		VERIFIER_START,
-		VERIFIER_NONCE
-	}
-	verifier_state;
+public:
+	void test_verify_irma_proof_cmdgen();
+
+	void setUp();
+	void tearDown();
 };
 
-#endif // !_SILVIA_VERIFIER_H
+#endif // !_SILVIA_ISSUER_IRMA_VERIFYTESTS_H
 

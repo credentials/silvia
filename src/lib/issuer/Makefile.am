@@ -14,4 +14,6 @@ libsilvia_issuer_la_SOURCES =	silvia_issuer_keygen.cpp \
 
 libsilvia_issuer_la_LIBADD =	
 
+if BUILD_TESTS
 SUBDIRS =			test
+endif
