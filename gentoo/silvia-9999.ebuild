@@ -13,13 +13,25 @@ EGIT_REPO_URI="https://github.com/credentials/silvia"
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS=""
-IUSE="test"
+IUSE="smartcard test xml"
 
 RDEPEND="
 	=dev-libs/gmp-5*[cxx]
-	dev-libs/openssl"
+	dev-libs/openssl
+	smartcard? ( sys-apps/pcsc-lite )
+	xml? ( dev-libs/libxml2 )"
 DEPEND="${RDEPEND}
 	test? ( dev-util/cppunit )"
 
 AUTOTOOLS_AUTORECONF=1
 AUTOTOOLS_PRUNE_LIBTOOL_FILES=all
+
+src_configure() {
+	local myeconfargs=(
+		$(use_with smartcard pcsc)
+		$(use_with test tests)
+		$(use_with xml xmlcfg)
+	)
+
+	autotools-utils_src_configure
+}
