@@ -93,7 +93,7 @@ set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header fi
 #        ${CMAKE_SOURCE_DIR}/include/${PKG_NAME}.h.cmake
 #        ${CMAKE_BINARY_DIR}/include/${PKG_NAME}.h
 #)
-add_library(${PKG_NAME} SHARED ${SOURCES} ${SOURCES_common})
+add_library(${PKG_NAME} SHARED ${SOURCES})
 target_link_libraries(${PKG_NAME} ${LIBS})
 set_target_properties(${PKG_NAME} PROPERTIES
   VERSION ${PKG_VERSION}
