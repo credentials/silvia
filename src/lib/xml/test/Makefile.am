@@ -22,4 +22,4 @@ xmltest_LDFLAGS = 		-no-install
 
 TESTS = 			xmltest
 
-EXTRA_DIST =			$(srcdir)/*.h
+EXTRA_DIST =			$(srcdir)/*.h $(srcdir)/*.xml

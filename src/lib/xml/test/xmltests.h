@@ -52,6 +52,8 @@ public:
 
 	void setUp();
 	void tearDown();
+
+	std::string getDir() const;
 };
 
 #endif // !_SILVIA_XML_XMLTESTS_H

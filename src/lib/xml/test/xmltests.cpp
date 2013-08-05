@@ -45,6 +45,12 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION(xml_tests);
 
+std::string xml_tests::getDir() const
+{
+    char * val = getenv( "srcdir" );
+    return val == NULL ? std::string("./") : std::string(val) + "/";
+}
+
 void xml_tests::setUp()
 {
 }
@@ -55,7 +61,7 @@ void xml_tests::tearDown()
 
 void xml_tests::test_idemix_read_pubkey()
 {
-	silvia_pub_key* pub_key = silvia_idemix_xmlreader::i()->read_idemix_pubkey("ipk.xml");
+	silvia_pub_key* pub_key = silvia_idemix_xmlreader::i()->read_idemix_pubkey(getDir() + "ipk.xml");
 	
 	CPPUNIT_ASSERT(pub_key != NULL);
 	
@@ -78,7 +84,7 @@ void xml_tests::test_idemix_read_pubkey()
 
 void xml_tests::test_idemix_read_privkey()
 {
-	silvia_priv_key* priv_key = silvia_idemix_xmlreader::i()->read_idemix_privkey("isk.xml");
+	silvia_priv_key* priv_key = silvia_idemix_xmlreader::i()->read_idemix_privkey(getDir() + "isk.xml");
 	
 	CPPUNIT_ASSERT(priv_key != NULL);
 	
@@ -90,8 +96,10 @@ void xml_tests::test_idemix_read_privkey()
 
 void xml_tests::test_irma_read_verifier_spec()
 {
-	silvia_verifier_specification* spec = silvia_irma_xmlreader::i()->read_verifier_spec("id_agelower.xml", "vd_bar.xml");
+	silvia_verifier_specification* spec = silvia_irma_xmlreader::i()->read_verifier_spec(getDir() + "id_agelower.xml", getDir() + "vd_bar.xml");
 	
+	CPPUNIT_ASSERT(spec != NULL);
+
 	CPPUNIT_ASSERT(spec->get_verifier_name() == "Bar");
 	CPPUNIT_ASSERT(spec->get_short_msg() == "Age: 18+");
 	CPPUNIT_ASSERT(spec->get_verifier_id() == 801);
@@ -106,6 +114,4 @@ void xml_tests::test_irma_read_verifier_spec()
 	CPPUNIT_ASSERT(spec->get_D()[2] == false);
 	CPPUNIT_ASSERT(spec->get_D()[3] == true);
 	CPPUNIT_ASSERT(spec->get_D()[4] == false);
-	
-	CPPUNIT_ASSERT(spec != NULL);	
 }
