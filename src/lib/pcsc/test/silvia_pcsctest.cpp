@@ -160,7 +160,7 @@ bool test_full_proof(silvia_card* card, mpz_class& n1_value, mpz_class& context_
 	mpz_class context_mpz = silvia_rng::i()->get_random(SYSPAR(l_H));
 	bytestring context(context_mpz);
 	bytestring id = "000a"; // age credential
-	bytestring D_val = "0010"; // disclose "over 18"
+	bytestring D_val = "0012"; // disclose "expiry" and "over18"
 	bytestring timestamp = "01020304";
 	
 	while (context.size() < 32) context = "00" + context;
@@ -215,7 +215,9 @@ bool test_full_proof(silvia_card* card, mpz_class& n1_value, mpz_class& context_
 	
 	// Expiry
 	exchange_apdu(card, "GET RESPONSE", "802C0100", data, sw, 0x9000);
-	a_i_hat.push_back(data.mpz_val());
+	silvia_string_attribute expiry;
+	expiry.from_rep(data.mpz_val());
+	a_i.push_back(&expiry);
 	
 	// Over 12
 	exchange_apdu(card, "GET RESPONSE", "802C0200", data, sw, 0x9000);
@@ -250,7 +252,7 @@ bool test_full_proof(silvia_card* card, mpz_class& n1_value, mpz_class& context_
 	
 	// Proof specification
 	std::vector<bool> D;
-	D.push_back(false);		// expiry
+	D.push_back(true);		// expiry
 	D.push_back(false);		// over 12
 	D.push_back(false);		// over 16
 	D.push_back(true);		// over 18
