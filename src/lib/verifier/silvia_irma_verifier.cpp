@@ -42,6 +42,7 @@
 #include "silvia_parameters.h"
 #include <vector>
 #include <assert.h>
+#include <time.h>
 
 silvia_irma_verifier::silvia_irma_verifier(silvia_pub_key* pubkey, silvia_verifier_specification* vspec)
 {

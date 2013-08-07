@@ -46,6 +46,19 @@
 
 #endif // __MACH__
 
+#ifdef __MINGW32__
+
+#define CLOCK_MONOTONIC 1
+
+/* POSIX.1b structure for a time value.  This is like a `struct timeval' but
+   has nanoseconds instead of microseconds.  */
+struct timespec {
+  long int tv_sec;		/* Seconds.  */
+  long int tv_nsec;	/* Nanoseconds.  */
+};
+
+#endif // __MINGW32__
+
 /**
  * Timer class
  */
