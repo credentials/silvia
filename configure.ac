@@ -154,7 +154,9 @@ AC_SEARCH_LIBS([clock_gettime],[rt posix4])
 # Add -lgdi32 when building for MinGW
 case "${host}" in
 	*-mingw*)
-		LIBS="${LIBS} -lgdi32";;
+		LIBS="${LIBS} -lgdi32"
+		LDFLAGS="${LDFLAGS} -static-libgcc"
+		;;
 esac
 
 # Define default paths
