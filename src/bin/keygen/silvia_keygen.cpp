@@ -101,7 +101,7 @@ int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, size_t num_attrib
     fprintf(pub_key_file, "    <n>"); fprintmpzdec(pub_key_file, pub_key->get_n()); fprintf(pub_key_file, "</n>\n");
     fprintf(pub_key_file, "    <Bases num=\"%zd\">\n", num_attribs);
     
-    for (size_t i = 0; i < num_attribs; i++)
+    for (size_t i = 0; i < num_attribs + 1; i++)
     {
 		fprintf(pub_key_file, "      <Base_%zd>", i); fprintmpzdec(pub_key_file, pub_key->get_R()[i]); fprintf(pub_key_file, "</Base_%zd>\n", i);
 	}
