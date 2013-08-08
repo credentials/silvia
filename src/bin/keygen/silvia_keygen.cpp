@@ -42,6 +42,13 @@
 // Default modulus size for new keys
 #define DEFAULT_BITSIZE 2048
 
+// Microsoft does not support the 'z' prefix for size types
+#ifdef __MINGW32__
+  #define SIZE_T_PREFIX "Id"
+#else
+  #define SIZE_T_PREFIX "zd"
+#endif
+
 void version(void)
 {
 	printf("The Simple Library for Verifying and Issuing Attributes (silvia)\n");
@@ -76,7 +83,7 @@ void usage(void)
 
 int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, size_t num_attribs, size_t bit_size)
 {
-	printf("Generating %zd-bit issuer key pair for %zd attributes ... ", bit_size, num_attribs); fflush(stdout);
+	printf("Generating %"SIZE_T_PREFIX"-bit issuer key pair for %"SIZE_T_PREFIX" attributes ... ", bit_size, num_attribs); fflush(stdout);
 	
 	// Set key size
 	silvia_system_parameters::i()->set_l_n(bit_size);
@@ -99,11 +106,11 @@ int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, size_t num_attrib
     fprintf(pub_key_file, "    <S>"); fprintmpzdec(pub_key_file, pub_key->get_S()); fprintf(pub_key_file, "</S>\n");
     fprintf(pub_key_file, "    <Z>"); fprintmpzdec(pub_key_file, pub_key->get_Z()); fprintf(pub_key_file, "</Z>\n");
     fprintf(pub_key_file, "    <n>"); fprintmpzdec(pub_key_file, pub_key->get_n()); fprintf(pub_key_file, "</n>\n");
-    fprintf(pub_key_file, "    <Bases num=\"%zd\">\n", num_attribs);
+    fprintf(pub_key_file, "    <Bases num=\"%"SIZE_T_PREFIX"\">\n", num_attribs);
     
     for (size_t i = 0; i < num_attribs + 1; i++)
     {
-		fprintf(pub_key_file, "      <Base_%zd>", i); fprintmpzdec(pub_key_file, pub_key->get_R()[i]); fprintf(pub_key_file, "</Base_%zd>\n", i);
+		fprintf(pub_key_file, "      <Base_%"SIZE_T_PREFIX">", i); fprintmpzdec(pub_key_file, pub_key->get_R()[i]); fprintf(pub_key_file, "</Base_%"SIZE_T_PREFIX">\n", i);
 	}
       
     fprintf(pub_key_file, "    </Bases>\n");
