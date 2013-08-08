@@ -50,12 +50,15 @@
 
 #define CLOCK_MONOTONIC 1
 
+#ifndef _TIMESPEC_DEFINED
+#define _TIMESPEC_DEFINED
 /* POSIX.1b structure for a time value.  This is like a `struct timeval' but
    has nanoseconds instead of microseconds.  */
 struct timespec {
   long int tv_sec;		/* Seconds.  */
   long int tv_nsec;	/* Nanoseconds.  */
 };
+#endif // _TIMESPEC_DEFINED
 
 #endif // __MINGW32__
 
