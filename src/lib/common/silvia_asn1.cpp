@@ -100,7 +100,7 @@ std::vector<unsigned char> silvia_asn1_sequence::get_der_encoding()
 	std::vector<unsigned char> der_enc;
 	
 	// Encode the number of objects in the sequence
-	silvia_asn1_integer obj_count(objects.size());
+	silvia_asn1_integer obj_count((long unsigned int) objects.size());
 	std::vector<unsigned char> obj_count_der = obj_count.get_der_encoding();
 	
 	value.insert(value.end(), obj_count_der.begin(), obj_count_der.end());
