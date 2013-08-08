@@ -147,6 +147,16 @@ AC_FUNC_MEMCMP
 # Check for clock_gettime
 AC_SEARCH_LIBS([clock_gettime],[rt posix4])
 
+##
+## Architecture/Platform specific fixes
+##
+
+# Add -lgdi32 when building for MinGW
+case "${host}" in
+	*-mingw*)
+		LIBS="${LIBS} -lgdi32";;
+esac
+
 # Define default paths
 full_sysconfdir=`eval eval eval eval eval echo "${sysconfdir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
 full_localstatedir=`eval eval eval eval eval echo "${localstatedir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
