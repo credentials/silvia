@@ -167,8 +167,8 @@ bool test_full_proof(silvia_card* card, mpz_class& n1_value, mpz_class& context_
 	
 	silvia_apdu prove_apdu(0x80, 0x20, 0x00, 0x00);
 	prove_apdu.append_data(id);
-	prove_apdu.append_data(context);
 	prove_apdu.append_data(D_val);
+	prove_apdu.append_data(context);
 	prove_apdu.append_data(timestamp);
 	
 	exchange_apdu(card, "PROVE CREDENTIAL", prove_apdu.get_apdu(), data, sw, 0x9000);
