@@ -101,6 +101,33 @@ bytestring::bytestring(const unsigned long longValue)
 	memcpy(&byteString[0], byteStrIn, 8);
 }
 
+bytestring::bytestring(const unsigned short shortValue)
+{
+	unsigned short setValue = shortValue;
+
+	// Convert the value to a big-endian byte string; N.B.: this code assumes that unsigned long
+	// values are stored as a 64-bit value, which is a safe assumption on modern systems. It will
+	// also properly handle a 32-bit value and will simply store 4 zeroes at the front of the
+	// string. If at some point in time we get 128-bit architectures, the top 8 bytes of the value
+	// will be discarded... (but hey, 640K is enough for everybody, right?)
+	//
+	// The reason for coding it this way is that implementations of SoftHSM will maintain
+	// binary compatibility between eachothers background storage (i.e. a 32-bit SoftHSM version can
+	// read the storage of a 64-bit version and vice versa under the assumption that the stored
+	// values never exceed 32-bits, which is likely since these values are only used to encode
+	// byte string lengths)
+	unsigned char byteStrIn[2];
+
+	for (size_t i = 0; i < 2; i++)
+	{
+		byteStrIn[1-i] = (unsigned char) (setValue & 0xFF);
+		setValue >>= 8;
+	}
+
+	byteString.resize(2);
+	memcpy(&byteString[0], byteStrIn, 2);
+}
+
 bytestring::bytestring(const bytestring& in)
 {
 	this->byteString = in.byteString;

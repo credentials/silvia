@@ -58,6 +58,7 @@ public:
 	bytestring(const char* hexString);
 
 	bytestring(const unsigned long longValue);
+	bytestring(const unsigned short shortValue);
 
 	bytestring(const bytestring& in);
 	
