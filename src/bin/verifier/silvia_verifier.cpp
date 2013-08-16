@@ -35,7 +35,13 @@
 #include "config.h"
 #include "silvia_parameters.h"
 #include "silvia_irma_verifier.h"
-#include "silvia_card.h"
+#ifdef WITH_PCSC
+#include "silvia_pcsc_card.h"
+#endif // WITH_PCSC
+#ifdef WITH_NFC
+#include "silvia_nfc_card.h"
+#endif // WITH_NFC
+#include "silvia_card_channel.h"
 #include "silvia_irma_xmlreader.h"
 #include "silvia_idemix_xmlreader.h"
 #include "silvia_types.h"
@@ -44,10 +50,19 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>
+#include <signal.h>
 
 const char* weekday[7] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 
 const char* month[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+
+void signal_handler(int signal)
+{
+	// Exit on any signal we receive and handle
+	fprintf(stderr, "\nCaught signal, exiting...\n");
+	
+	exit(0);
+}
 
 void set_parameters()
 {
@@ -82,7 +97,11 @@ void usage(void)
 {
 	printf("Silvia command-line IRMA verifier %s\n\n", VERSION);
 	printf("Usage:\n");
-	printf("\tsilvia_verifier -I <issuer-spec> -V <verifier-spec> -k <issuer-pubkey> [-p]\n");
+	printf("\tsilvia_verifier -I <issuer-spec> -V <verifier-spec> -k <issuer-pubkey> [-p]");
+#if defined(WITH_PCSC) && defined(WITH_NFC)
+	printf(" [-P] [-N]");
+#endif // WITH_PCSC && WITH_NFC
+	printf("\n");
 	printf("\tsilvia_keygen -h\n");
 	printf("\tsilvia_keygen -v\n");
 	printf("\n");
@@ -90,13 +109,17 @@ void usage(void)
 	printf("\t-V <verifier-spec> Read verifier specification from <verifier-spec>\n");
 	printf("\t-k <issuer-pubkey> Read issuer public key from <issuer-pubkey>\n");
 	printf("\t-p                 Force PIN verification\n");
+#if defined(WITH_PCSC) && defined(WITH_NFC)
+	printf("\t-P                 Use PC/SC for card communication (default)\n");
+	printf("\t-N                 Use NFC for card communication\n");
+#endif // WITH_PCSC && WITH_NFC
 	printf("\n");
 	printf("\t-h                 Print this help message\n");
 	printf("\n");
 	printf("\t-v                 Print the version number\n");
 }
 
-bool verify_pin(silvia_card* card)
+bool verify_pin(silvia_card_channel* card)
 {
 	printf("\n");
 	printf("=================================================\n");
@@ -181,12 +204,12 @@ bytestring bs2str(const bytestring& in)
 	return out;
 }
 
-void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::string issuer_pubkey, bool force_pin)
+void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::string issuer_pubkey, bool force_pin, int channel_type)
 {
-	silvia_card* card = NULL;
+	silvia_card_channel* card = NULL;
 	
 	printf("Silvia command-line IRMA verifier %s\n\n", VERSION);
-	
+		
 	// Read configuration files
 	silvia_verifier_specification* vspec = silvia_irma_xmlreader::i()->read_verifier_spec(issuer_spec, verifier_spec);
 	
@@ -216,15 +239,43 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 		printf("\n********************************************************************************\n");
 		printf("%s: %s\n\n", vspec->get_verifier_name().c_str(), vspec->get_short_msg().c_str());
 		
-		printf("Waiting for card... "); fflush(stdout);
+		printf("Waiting for card");
 		
-		if (!silvia_card_monitor::i()->wait_for_card(&card))
+#ifdef WITH_PCSC
+		if (channel_type == SILVIA_CHANNEL_PCSC)
 		{
-			printf("FAILED, exiting\n");
+			printf("(PCSC) ..."); fflush(stdout);
 			
-			exit(-1);
+			silvia_pcsc_card* pcsc_card = NULL;
+			
+			if (!silvia_pcsc_card_monitor::i()->wait_for_card(&pcsc_card))
+			{
+				printf("FAILED, exiting\n");
+				
+				exit(-1);
+			}
+			
+			card = pcsc_card;
 		}
-		
+#endif // WITH_PCSC
+#ifdef WITH_NFC
+		if (channel_type == SILVIA_CHANNEL_NFC)
+		{
+			printf("(NFC) ..."); fflush(stdout);
+			
+			silvia_nfc_card* nfc_card = NULL;
+			
+			if (!silvia_nfc_card_monitor::i()->wait_for_card(&nfc_card))
+			{
+				printf("FAILED, exiting\n");
+				
+				exit(-1);
+			}
+			
+			card = nfc_card;
+		}
+#endif // WITH_NFC
+			
 		printf("OK\n");
 		
 		// Get card commands
@@ -367,6 +418,12 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 
 int main(int argc, char* argv[])
 {
+	// Handle signals
+	signal(SIGQUIT, signal_handler);
+	signal(SIGTERM, signal_handler);
+	signal(SIGINT, signal_handler);
+	signal(SIGABRT, signal_handler);
+	
 	// Set library parameters
 	set_parameters();
 	
@@ -376,8 +433,19 @@ int main(int argc, char* argv[])
 	std::string issuer_pubkey;
 	bool force_pin = false;
 	int c = 0;
+#if defined(WITH_PCSC) && defined(WITH_NFC)
+	int channel_type = SILVIA_CHANNEL_PCSC;
+#elif defined(WITH_PCSC)
+	int channel_type = SILVIA_CHANNEL_PCSC;
+#elif defined(WITH_NFC)
+	int channel_type = SILVIA_CHANNEL_NFC;
+#endif
 	
+#if defined(WITH_PCSC) && defined(WITH_NFC)
+	while ((c = getopt(argc, argv, "I:V:k:phvPN")) != -1)
+#else
 	while ((c = getopt(argc, argv, "I:V:k:phv")) != -1)
+#endif
 	{
 		switch (c)
 		{
@@ -399,6 +467,14 @@ int main(int argc, char* argv[])
 		case 'p':
 			force_pin = true;
 			break;
+#if defined(WITH_PCSC) && defined(WITH_NFC)
+		case 'P':
+			channel_type = SILVIA_CHANNEL_PCSC;
+			break;
+		case 'N':
+			channel_type = SILVIA_CHANNEL_NFC;
+			break;
+#endif
 		}
 	}
 	
@@ -423,7 +499,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	
-	verifier_loop(issuer_spec, verifier_spec, issuer_pubkey, force_pin);
+	verifier_loop(issuer_spec, verifier_spec, issuer_pubkey, force_pin, channel_type);
 	
 	return 0;
 }

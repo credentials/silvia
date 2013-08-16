@@ -27,74 +27,27 @@
  */
 
 /*****************************************************************************
- silvia_card.h
+ silvia_pcsc_card.h
 
  Smart card communication classes
  *****************************************************************************/
  
 #include "config.h"
 #include "silvia_bytestring.h"
+#include "silvia_card_channel.h"
 #include <PCSC/winscard.h>
 #include <PCSC/wintypes.h>
 #include <memory>
 #include <string>
  
-#ifndef _SILVIA_CARD_H
-#define _SILVIA_CARD_H
-
-/**
- * Card channel interface
- */
- 
-#define SILVIA_CHANNEL_READER			0x01	// Local PC/SC reader
-#define SILVIA_CHANNEL_PROXY			0x02	// Card proxy
- 
-class silvia_card_channel
-{
-public:
-	/**
-	 * Get the channel type
-	 * @return the channel type
-	 */
-	virtual int get_type() = 0;
-	
-	/**
-	 * Get the connection status
-	 * @return true if the connection is up
-	 */
-	virtual bool status() = 0;
-	
-	/**
-	 * Transmit an APDU and receive return data
-	 * @param apdu The APDU to transmit
-	 * @param data The return data
-	 * @param sw The return status word
-	 * @return true if the APDU exchange completed successfully
-	 */
-	virtual bool transmit(bytestring APDU, bytestring& data, unsigned short& sw) = 0;
-	
-	/**
-	 * Transmit an APDU and receive return data
-	 * @param apdu The APDU to transmit
-	 * @param data_sw The return data including the status word
-	 * @return true if the APDU exchange completed successfully
-	 */
-	virtual bool transmit(bytestring APDU, bytestring& data_sw) = 0;
-	
-	/**
-	 * Get the card reader name in which the card resides
-	 * @return the card reader name of the reader containing the card
-	 */
-	virtual std::string get_reader_name() = 0;
-
-private:
-};
+#ifndef _SILVIA_PCSC_CARD_H
+#define _SILVIA_PCSC_CARD_H
  
 /**
  * Card class
  */
   
-class silvia_card : public silvia_card_channel
+class silvia_pcsc_card : public silvia_card_channel
 {
 public:
 	/**
@@ -103,13 +56,13 @@ public:
 	 * @param protocol the card protocol (T=0 or T=1)
 	 * @param reader_name the card reader name
 	 */
-	silvia_card(SCARDHANDLE card_handle, DWORD protocol, std::string reader_name);
+	silvia_pcsc_card(SCARDHANDLE card_handle, DWORD protocol, std::string reader_name);
 	
 	/**
 	 * Destructor
 	 * Will disconnect from the card if a connection still exists
 	 */
-	~silvia_card();
+	~silvia_pcsc_card();
 	
 	/**
 	 * Get the channel type
@@ -161,14 +114,14 @@ private:
 /**
  * Card monitor class
  */
-class silvia_card_monitor
+class silvia_pcsc_card_monitor
 {
 public:
 	/**
 	 * Get the one-and-only instance of the card monitor object
 	 * @return the one-and-only instance of the card monitor object
 	 */
-	static silvia_card_monitor* i();
+	static silvia_pcsc_card_monitor* i();
 	
 	/**
 	 * Wait for a new card to be inserted
@@ -176,22 +129,22 @@ public:
 	 * @return true if a card was successfully detected and a new card
 	 *              object was created
 	 */
-	bool wait_for_card(silvia_card** card);
+	bool wait_for_card(silvia_pcsc_card** card);
 	
 	/**
 	 * Destructor
 	 */
-	~silvia_card_monitor();
+	~silvia_pcsc_card_monitor();
 	
 private:
 	// Constructor
-	silvia_card_monitor();
+	silvia_pcsc_card_monitor();
 	
 	// State
 	SCARDCONTEXT pcsc_context;
 
 	// The one-and-only instance
-	static std::auto_ptr<silvia_card_monitor> _i;	
+	static std::auto_ptr<silvia_pcsc_card_monitor> _i;	
 };
  
-#endif // !_SILVIA_CARD_H
+#endif // !_SILVIA_PCSC_CARD_H

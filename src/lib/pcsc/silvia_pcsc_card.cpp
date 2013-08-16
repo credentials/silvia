@@ -27,13 +27,13 @@
  */
 
 /*****************************************************************************
- silvia_card.cpp
+ silvia_pcsc_card.cpp
 
  Smart card communication classes
  *****************************************************************************/
  
 #include "config.h"
-#include "silvia_card.h"
+#include "silvia_pcsc_card.h"
 #include "silvia_macros.h"
 #include <PCSC/winscard.h>
 #include <assert.h>
@@ -45,7 +45,7 @@
 // Card class
 ////////////////////////////////////////////////////////////////////////
   
-silvia_card::silvia_card(SCARDHANDLE card_handle, DWORD protocol, std::string reader_name)
+silvia_pcsc_card::silvia_pcsc_card(SCARDHANDLE card_handle, DWORD protocol, std::string reader_name)
 {
 	this->card_handle = card_handle;
 	this->protocol = protocol;
@@ -56,7 +56,7 @@ silvia_card::silvia_card(SCARDHANDLE card_handle, DWORD protocol, std::string re
 	status();
 }
 	
-silvia_card::~silvia_card()
+silvia_pcsc_card::~silvia_pcsc_card()
 {
 	if (connected)
 	{
@@ -64,12 +64,12 @@ silvia_card::~silvia_card()
 	}
 }
 
-int silvia_card::get_type()
+int silvia_pcsc_card::get_type()
 {
-	return SILVIA_CHANNEL_READER;
+	return SILVIA_CHANNEL_PCSC;
 }
 	
-bool silvia_card::status()
+bool silvia_pcsc_card::status()
 {
 	if (!connected) return false;
 	
@@ -91,7 +91,7 @@ bool silvia_card::status()
 	return connected;
 }
 	
-bool silvia_card::transmit(bytestring APDU, bytestring& data, unsigned short& sw)
+bool silvia_pcsc_card::transmit(bytestring APDU, bytestring& data, unsigned short& sw)
 {
 	if (!transmit(APDU, data))
 	{
@@ -106,7 +106,7 @@ bool silvia_card::transmit(bytestring APDU, bytestring& data, unsigned short& sw
 	return true;
 }
 
-bool silvia_card::transmit(bytestring APDU, bytestring& data_sw)
+bool silvia_pcsc_card::transmit(bytestring APDU, bytestring& data_sw)
 {
 	if (!connected) return false;
 	
@@ -138,7 +138,7 @@ bool silvia_card::transmit(bytestring APDU, bytestring& data_sw)
 	return true;
 }
 
-std::string silvia_card::get_reader_name()
+std::string silvia_pcsc_card::get_reader_name()
 {
 	return reader_name;
 }
@@ -148,19 +148,19 @@ std::string silvia_card::get_reader_name()
 ////////////////////////////////////////////////////////////////////////
 
 // Initialise the one-and-only instance
-/*static*/ std::auto_ptr<silvia_card_monitor> silvia_card_monitor::_i(NULL);
+/*static*/ std::auto_ptr<silvia_pcsc_card_monitor> silvia_pcsc_card_monitor::_i(NULL);
 
-/*static*/ silvia_card_monitor* silvia_card_monitor::i()
+/*static*/ silvia_pcsc_card_monitor* silvia_pcsc_card_monitor::i()
 {
 	if (_i.get() == NULL)
 	{
-		_i = std::auto_ptr<silvia_card_monitor>(new silvia_card_monitor());
+		_i = std::auto_ptr<silvia_pcsc_card_monitor>(new silvia_pcsc_card_monitor());
 	}
 
 	return _i.get();
 }
 	
-bool silvia_card_monitor::wait_for_card(silvia_card** card)
+bool silvia_pcsc_card_monitor::wait_for_card(silvia_pcsc_card** card)
 {
 	assert(card != NULL);
 	
@@ -231,7 +231,7 @@ bool silvia_card_monitor::wait_for_card(silvia_card** card)
 				
 				if (rv == SCARD_S_SUCCESS)
 				{
-					*card = new silvia_card(card_handle, active_protocol, i->szReader);
+					*card = new silvia_pcsc_card(card_handle, active_protocol, i->szReader);
 					
 					free(readers_orig);
 					
@@ -255,14 +255,14 @@ bool silvia_card_monitor::wait_for_card(silvia_card** card)
 	return false;
 }
 	
-silvia_card_monitor::silvia_card_monitor()
+silvia_pcsc_card_monitor::silvia_pcsc_card_monitor()
 {
 	// FIXME: do something with the return value of this call rather
 	//        than asserting on failure
 	assert(SCardEstablishContext(SCARD_SCOPE_USER, NULL, NULL, &pcsc_context) == SCARD_S_SUCCESS);
 }
 
-silvia_card_monitor::~silvia_card_monitor()
+silvia_pcsc_card_monitor::~silvia_pcsc_card_monitor()
 {
 	SCardReleaseContext(pcsc_context);
 }

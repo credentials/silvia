@@ -4,9 +4,13 @@ MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
 SUBDIRS = keygen
 
-# Only build the command line verifier if we have PC/SC and XML support!
-if BUILD_PCSC
+# Only build the command line verifier if we have PC/SC or NFC and XML support!
 if BUILD_XMLCFG
+if BUILD_PCSC
 SUBDIRS += verifier
+else
+if BUILD_NFC
+SUBDIRS += verifier
+endif
 endif
 endif

@@ -4,14 +4,14 @@ MAINTAINERCLEANFILES = 		$(srcdir)/Makefile.in
 
 AM_CPPFLAGS = 			-I$(srcdir)/../common \
 				-I$(srcdir)/.. \
-				@PCSC_CFLAGS@
+				@NFC_CFLAGS@
 
-noinst_LTLIBRARIES =		libsilvia_pcsc.la
+noinst_LTLIBRARIES =		libsilvia_nfc.la
 
-libsilvia_pcsc_la_SOURCES =	silvia_pcsc_card.h \
-				silvia_pcsc_card.cpp
+libsilvia_nfc_la_SOURCES =	silvia_nfc_card.h \
+				silvia_nfc_card.cpp
 
-libsilvia_pcsc_la_LIBADD =	
+libsilvia_nfc_la_LIBADD =	
 
 if BUILD_TESTS
 SUBDIRS =			test

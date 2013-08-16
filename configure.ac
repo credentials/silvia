@@ -10,7 +10,7 @@ dnl
 
 define([SILVIA_VERSION_MAJOR], [0])
 define([SILVIA_VERSION_MINOR], [1])
-define([SILVIA_VERSION_BUILDREV], esyscmd([sh -c "svnversion|tr -d '\n'"]))
+define([SILVIA_VERSION_BUILDREV], [1])
 define([PACKAGE_SUFFIX], [])
 
 # Library version
@@ -71,7 +71,7 @@ AC_ARG_WITH(
 # Direct PC/SC support
 AC_ARG_WITH(
 	[pcsc],
-	AC_HELP_STRING([--with-pcsc], [Build the library with built-in PC/SC smart card support; requires PC/SC lite]),
+	AC_HELP_STRING([--with-pcsc], [Build the library with built-in PC/SC smart card support; requires PC/SC lite >= 1.4.0]),
 	[build_pcsc="${withval}"],
 	[build_pcsc="yes"]
 )
@@ -91,10 +91,28 @@ if test "x${build_pcsc}" = "xyes" ; then
 			AC_CHECK_LIB(pcsclite, SCardConnect)
 			;;
 	esac
+	AC_DEFINE(WITH_PCSC, 1, [build with PC/SC support])
 else
 	AC_MSG_RESULT(no)
 fi
 AM_CONDITIONAL([BUILD_PCSC], [test "x${build_pcsc}" = "xyes"])
+
+# Direct NFC support through libnfc
+AC_ARG_WITH(
+	[nfc],
+	AC_HELP_STRING([--with-nfc], [Build the library with built-in NFC support; requires libnfc >= 1.7.0]),
+	[build_nfc="${withval}"],
+	[build_nfc="yes"]
+)
+
+AC_MSG_CHECKING(if building with NFC support)
+if test "x${build_nfc}" = "xyes" ; then
+	AC_MSG_RESULT(yes)
+	ACX_NFC
+else
+	AC_MSG_RESULT(no)
+fi
+AM_CONDITIONAL([BUILD_NFC], [test "x${nfc_found}" = "xyes"])
 
 # Build unit test cases
 AC_ARG_WITH(
@@ -217,6 +235,8 @@ AC_CONFIG_FILES([
 	src/lib/pcsc/test/Makefile
 	src/lib/xml/Makefile
 	src/lib/xml/test/Makefile
+	src/lib/nfc/Makefile
+	src/lib/nfc/test/Makefile
 ])
 
 AC_OUTPUT
