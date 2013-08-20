@@ -244,7 +244,7 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 #ifdef WITH_PCSC
 		if (channel_type == SILVIA_CHANNEL_PCSC)
 		{
-			printf("(PCSC) ..."); fflush(stdout);
+			printf(" (PCSC) ..."); fflush(stdout);
 			
 			silvia_pcsc_card* pcsc_card = NULL;
 			
@@ -261,7 +261,7 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 #ifdef WITH_NFC
 		if (channel_type == SILVIA_CHANNEL_NFC)
 		{
-			printf("(NFC) ..."); fflush(stdout);
+			printf(" (NFC) ..."); fflush(stdout);
 			
 			silvia_nfc_card* nfc_card = NULL;
 			
@@ -418,12 +418,6 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 
 int main(int argc, char* argv[])
 {
-	// Handle signals
-	signal(SIGQUIT, signal_handler);
-	signal(SIGTERM, signal_handler);
-	signal(SIGINT, signal_handler);
-	signal(SIGABRT, signal_handler);
-	
 	// Set library parameters
 	set_parameters();
 	
@@ -498,6 +492,19 @@ int main(int argc, char* argv[])
 		
 		return -1;
 	}
+	
+#ifdef WITH_NFC
+	if (channel_type == SILVIA_CHANNEL_NFC)
+	{
+		// Handle signals when using NFC; this prevents the NFC reader
+		// from going into an undefined state when the user aborts the
+		// program by pressing Ctrl+C
+		signal(SIGQUIT, signal_handler);
+		signal(SIGTERM, signal_handler);
+		signal(SIGINT, signal_handler);
+		signal(SIGABRT, signal_handler);
+	}
+#endif
 	
 	verifier_loop(issuer_spec, verifier_spec, issuer_pubkey, force_pin, channel_type);
 	
