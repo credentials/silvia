@@ -32,26 +32,26 @@
  PCSC issuance test application
  *****************************************************************************/
  
-#include "silvia_card.h"
+#include "silvia_pcsc_card.h"
 #include "silvia_apdu.h"
 #include "silvia_verifier.h"
+#include "silvia_issuer.h"
+#include "silvia_issuer_keygen.h"
 #include "silvia_irma_verifier.h"
 #include "silvia_parameters.h"
 #include "silvia_rand.h"
 #include "silvia_macros.h"
-#include "silvia_issuer.h"
-#include "silvia_issuer_keygen.h"
 #include <stdio.h>
 #include <vector>
 #include <utility>
  
-silvia_card* get_card()
+silvia_pcsc_card* get_card()
 {
-	silvia_card* card;
+	silvia_pcsc_card* card;
 	
 	printf("Waiting for card... "); fflush(stdout);
 	
-	if (!silvia_card_monitor::i()->wait_for_card(&card))
+	if (!silvia_pcsc_card_monitor::i()->wait_for_card(&card))
 	{
 		printf("FAILED\n");
 	}
@@ -64,7 +64,7 @@ silvia_card* get_card()
 	return card;
 }
 
-void exchange_apdu(silvia_card* card, std::string cmd_name, bytestring apdu, bytestring& data, unsigned short& sw, unsigned short expected_sw, bool verbose = true)
+void exchange_apdu(silvia_pcsc_card* card, std::string cmd_name, bytestring apdu, bytestring& data, unsigned short& sw, unsigned short expected_sw, bool verbose = true)
 {
 	if (verbose) {
 		printf("Transmitting %s command...\n", cmd_name.c_str());
@@ -90,7 +90,7 @@ void exchange_apdu(silvia_card* card, std::string cmd_name, bytestring apdu, byt
 	}
 }
 
-void exchange_apdu(silvia_card* card, std::string cmd_name, bytestring apdu, bytestring& data_sw)
+void exchange_apdu(silvia_pcsc_card* card, std::string cmd_name, bytestring apdu, bytestring& data_sw)
 {
 	printf("Transmitting %s command...\n", cmd_name.c_str());
 	printf("Send: %s\n", apdu.hex_str().c_str());
@@ -110,7 +110,7 @@ bytestring fixLength(bytestring str, int length) {
 	return str;
 }
 
-int test_full_issuance(silvia_card* card, unsigned short id)
+int test_full_issuance(silvia_pcsc_card* card, unsigned short id)
 {
 	printf("\n\n\n");
 	printf("TESTING FULL PROOF\n\n\n");
@@ -332,7 +332,7 @@ int test_full_issuance(silvia_card* card, unsigned short id)
 
 int main(int argc, char* argv[])
 {
-	silvia_card* card = get_card();
+	silvia_pcsc_card* card = get_card();
 	
 	int fail_commitment_count = 0;
 	int fail_verify_count = 0;
