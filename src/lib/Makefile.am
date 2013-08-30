@@ -40,6 +40,13 @@ SUBDIRS +=			pcsc
 libsilvia_la_LDFLAGS +=		@PCSC_LIBS@
 endif
 
+if BUILD_NFC
+AM_CPPFLAGS +=			-I$(srcdir)/nfc
+libsilvia_la_LIBADD +=		nfc/libsilvia_nfc.la
+SUBDIRS +=			nfc
+libsilvia_la_LDFLAGS +=		@NFC_LIBS@
+endif
+
 if BUILD_XMLCFG
 AM_CPPFLAGS +=			-I$(srcdir)/xml
 libsilvia_la_LIBADD +=		xml/libsilvia_xml.la

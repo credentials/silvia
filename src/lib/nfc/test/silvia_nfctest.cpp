@@ -27,12 +27,12 @@
  */
 
 /*****************************************************************************
- silvia_pcsctest.cpp
+ silvia_nfctest.cpp
 
- PCSC test application
+ NFC test application
  *****************************************************************************/
  
-#include "silvia_pcsc_card.h"
+#include "silvia_nfc_card.h"
 #include "silvia_apdu.h"
 #include "silvia_verifier.h"
 #include "silvia_irma_verifier.h"
@@ -43,13 +43,13 @@
 #include <vector>
 #include <utility>
  
-silvia_pcsc_card* get_card()
+silvia_nfc_card* get_card()
 {
-	silvia_pcsc_card* card;
+	silvia_nfc_card* card;
 	
 	printf("Waiting for card... "); fflush(stdout);
 	
-	if (!silvia_pcsc_card_monitor::i()->wait_for_card(&card))
+	if (!silvia_nfc_card_monitor::i()->wait_for_card(&card))
 	{
 		printf("FAILED\n");
 	}
@@ -63,7 +63,7 @@ silvia_pcsc_card* get_card()
 	return card;
 }
 
-void exchange_apdu(silvia_pcsc_card* card, std::string cmd_name, bytestring apdu, bytestring& data, unsigned short& sw, unsigned short expected_sw)
+void exchange_apdu(silvia_nfc_card* card, std::string cmd_name, bytestring apdu, bytestring& data, unsigned short& sw, unsigned short expected_sw)
 {
 	printf("Transmitting %s command...\n", cmd_name.c_str());
 	printf("Send: %s\n", apdu.hex_str().c_str());
@@ -85,7 +85,7 @@ void exchange_apdu(silvia_pcsc_card* card, std::string cmd_name, bytestring apdu
 	}
 }
 
-void exchange_apdu(silvia_pcsc_card* card, std::string cmd_name, bytestring apdu, bytestring& data_sw)
+void exchange_apdu(silvia_nfc_card* card, std::string cmd_name, bytestring apdu, bytestring& data_sw)
 {
 	printf("Transmitting %s command...\n", cmd_name.c_str());
 	printf("Send: %s\n", apdu.hex_str().c_str());
@@ -100,7 +100,7 @@ void exchange_apdu(silvia_pcsc_card* card, std::string cmd_name, bytestring apdu
 	printf("Recv: %s\n\n", data_sw.hex_str().c_str());
 }
 
-bool test_full_proof(silvia_pcsc_card* card, mpz_class& n1_value, mpz_class& context_val, mpz_class& c_val, mpz_class& A_prime_val, mpz_class& e_hat_val, mpz_class& v_prime_hat_val, std::vector<mpz_class>& a_i_hat_val)
+bool test_full_proof(silvia_nfc_card* card, mpz_class& n1_value, mpz_class& context_val, mpz_class& c_val, mpz_class& A_prime_val, mpz_class& e_hat_val, mpz_class& v_prime_hat_val, std::vector<mpz_class>& a_i_hat_val)
 {
 	printf("\n\n\n");
 	printf("TESTING FULL PROOF\n\n\n");
@@ -167,8 +167,8 @@ bool test_full_proof(silvia_pcsc_card* card, mpz_class& n1_value, mpz_class& con
 	
 	silvia_apdu prove_apdu(0x80, 0x20, 0x00, 0x00);
 	prove_apdu.append_data(id);
-	prove_apdu.append_data(D_val);
 	prove_apdu.append_data(context);
+	prove_apdu.append_data(D_val);
 	prove_apdu.append_data(timestamp);
 	
 	exchange_apdu(card, "PROVE CREDENTIAL", prove_apdu.get_apdu(), data, sw, 0x9000);
@@ -282,7 +282,7 @@ bool test_full_proof(silvia_pcsc_card* card, mpz_class& n1_value, mpz_class& con
 	return rv;
 }
 
-void test_irma_verifier(silvia_pcsc_card* card)
+void test_irma_verifier(silvia_nfc_card* card)
 {
 	////////////////////////////////////////////////////////////////////
 	// System parameters
@@ -369,7 +369,7 @@ void test_irma_verifier(silvia_pcsc_card* card)
 
 int main(int argc, char* argv[])
 {
-	silvia_pcsc_card* card = get_card();
+	silvia_nfc_card* card = get_card();
 	
 	int fail_count = 0;
 	int ok_count = 0;
