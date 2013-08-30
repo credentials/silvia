@@ -40,6 +40,7 @@
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define NFC_TIMEOUT 5000
 
