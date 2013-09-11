@@ -35,7 +35,6 @@
 #ifndef _SILVIA_TYPES_H
 #define _SILVIA_TYPES_H
 
-#include "config.h"
 #include <gmpxx.h>
 #include <vector>
 #include <string>

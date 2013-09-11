@@ -14,6 +14,9 @@ libsilvia_prover_la_SOURCES =	silvia_prover_credgen.h \
 
 libsilvia_prover_la_LIBADD =	
 
+pkginclude_HEADERS =		silvia_prover.h \
+				silvia_prover_credgen.h
+
 if BUILD_TESTS
 SUBDIRS =			test
 endif

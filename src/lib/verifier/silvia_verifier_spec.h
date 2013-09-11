@@ -35,7 +35,6 @@
 #ifndef _SILVIA_VERIFIER_SPEC_H
 #define _SILVIA_VERIFIER_SPEC_H
 
-#include "config.h"
 #include <gmpxx.h>
 #include "silvia_types.h"
 #include <vector>

@@ -217,6 +217,7 @@ AC_PROG_INSTALL
 # Generate the makefiles
 AC_CONFIG_FILES([
 	Makefile
+	silvia.pc
 	src/Makefile
 	src/bin/Makefile
 	src/bin/keygen/Makefile

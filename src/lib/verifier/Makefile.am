@@ -16,6 +16,10 @@ libsilvia_verifier_la_SOURCES =	silvia_verifier.h \
 
 libsilvia_verifier_la_LIBADD =	
 
+pkginclude_HEADERS =		silvia_verifier.h \
+				silvia_verifier_spec.h \
+				silvia_irma_verifier.h
+
 if BUILD_TESTS
 SUBDIRS =			test
 endif

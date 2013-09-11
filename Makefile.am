@@ -27,3 +27,6 @@ doc_DATA =		AUTHORS \
 			README.md
 
 SUBDIRS = src 
+
+pkgconfigdir = 		$(libdir)/pkgconfig
+pkgconfig_DATA =	silvia.pc

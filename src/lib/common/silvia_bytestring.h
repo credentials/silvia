@@ -41,7 +41,6 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <gmpxx.h>
-#include "config.h"
 
 #ifndef SIZE_T_MAX
 #define SIZE_T_MAX ((size_t) -1)

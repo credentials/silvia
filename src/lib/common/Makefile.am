@@ -27,6 +27,9 @@ libsilvia_common_la_SOURCES =	silvia_types.h \
 
 libsilvia_common_la_LIBADD =	
 
+pkginclude_HEADERS =		silvia_types.h \
+				silvia_bytestring.h
+
 if BUILD_TESTS
 SUBDIRS =			test
 endif

@@ -81,7 +81,7 @@ void exchange_apdu(silvia_pcsc_card* card, std::string cmd_name, bytestring apdu
 	{
 		printf("Unexpected response status word\n");
 		
-		exit(-1);
+		//exit(-1);
 	}
 }
 
@@ -144,7 +144,7 @@ bool test_full_proof(silvia_pcsc_card* card, mpz_class& n1_value, mpz_class& con
 	
 	bytestring data;
 	unsigned short sw;
-	
+
 	exchange_apdu(card, "SELECT", "00A404000849524D416361726400", data, sw, 0x9000);
 	
 	////////////////////////////////////////////////////////////////////
