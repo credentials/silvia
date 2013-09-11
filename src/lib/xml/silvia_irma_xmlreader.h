@@ -36,7 +36,6 @@
 #ifndef _SILVIA_IRMA_XMLREADER_H
 #define _SILVIA_IRMA_XMLREADER_H
 
-#include "config.h"
 #include <gmpxx.h>
 #include "silvia_types.h"
 #include "silvia_verifier_spec.h"

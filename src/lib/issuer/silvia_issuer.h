@@ -35,7 +35,6 @@
 #ifndef _SILVIA_ISSUER_H
 #define _SILVIA_ISSUER_H
 
-#include "config.h"
 #include <gmpxx.h>
 #include "silvia_types.h"
 

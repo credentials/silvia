@@ -21,6 +21,9 @@ libsilvia_xml_la_SOURCES =	silvia_idemix_xmlreader.h \
 
 libsilvia_xml_la_LIBADD =	
 
+pkginclude_HEADERS =		silvia_irma_xmlreader.h \
+				silvia_idemix_xmlreader.h
+
 if BUILD_TESTS
 SUBDIRS =			test
 endif

@@ -36,7 +36,6 @@
 #ifndef _SILVIA_IDEMIX_XMLREADER_H
 #define _SILVIA_IDEMIX_XMLREADER_H
 
-#include "config.h"
 #include <gmpxx.h>
 #include "silvia_types.h"
 #include <vector>
