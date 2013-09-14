@@ -178,6 +178,12 @@ public:
 	virtual mpz_class& rep() { return attr_rep; }
 	
 	/**
+	 * Get a string with a integer representation
+	 * @return a string with an integer representation of the attribute
+	 */
+	std::string int_rep();
+	
+	/**
 	 * Recreate the attribute from the representation
 	 * @param rep the representation
 	 */
@@ -411,6 +417,12 @@ public:
 	 * @return the v value of the CL signature for this credential
 	 */
 	mpz_class& get_v();
+	
+	/**
+	 * Get all attributes
+	 * @return a vector with all attributes
+	 */
+	const std::vector<silvia_attribute*>& get_attributes();
 
 private:
 	// The credential secret

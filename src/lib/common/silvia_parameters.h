@@ -1,5 +1,3 @@
-/* $Id: silvia_parameters.h 52 2013-07-02 13:16:24Z rijswijk $ */
-
 /*
  * Copyright (c) 2013 Roland van Rijswijk-Deij
  * All rights reserved.
@@ -35,7 +33,6 @@
 #ifndef _SILVIA_PARAMETERS_H
 #define _SILVIA_PARAMETERS_H
 
-#include "config.h"
 #include <memory>
 #include <string>
 #include <stdlib.h>

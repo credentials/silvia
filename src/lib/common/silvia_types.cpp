@@ -132,6 +132,17 @@ silvia_attribute::silvia_attribute()
 	attr_rep = 0;
 }
 
+std::string silvia_attribute::int_rep()
+{
+	char* int_rep_str = mpz_get_str(NULL, 10, _Z(attr_rep));
+	
+	std::string rv = std::string(int_rep_str);
+	
+	free(int_rep_str);
+	
+	return rv;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // String value attribute implementation
 ////////////////////////////////////////////////////////////////////////////////
@@ -315,5 +326,10 @@ mpz_class& silvia_credential::get_e()
 mpz_class& silvia_credential::get_v()
 {
 	return v;
+}
+
+const std::vector<silvia_attribute*>& silvia_credential::get_attributes()
+{
+	return attributes;
 }
 
