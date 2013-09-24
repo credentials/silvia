@@ -149,6 +149,16 @@ size_t silvia_system_parameters::get_rabin_miller_its()
 	return rabin_miller_its;
 }
 
+void silvia_system_parameters::set_irma_kludge(bool enable)
+{
+	irma_kludge = enable;
+}
+	
+bool silvia_system_parameters::get_irma_kludge_enabled()
+{
+	return irma_kludge;
+}
+
 void silvia_system_parameters::reset()
 {
 	// Initialise with default values
@@ -162,4 +172,5 @@ void silvia_system_parameters::reset()
 	l_pt				= 80;
 	rabin_miller_its	= 40;
 	hash_type			= "sha256";
+	irma_kludge			= false;
 }
