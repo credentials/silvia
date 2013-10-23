@@ -2,7 +2,7 @@
 
 AC_DEFUN([ACX_NFC],[
 	nfc_found=no
-	PKG_CHECK_MODULES([NFC], [libnfc >= 1.7.0-rc8], [
+	PKG_CHECK_MODULES([NFC], [libnfc >= 1.7.0], [
 		AC_CHECK_LIB(nfc, nfc_open, [
 			AM_CONDITIONAL([BUILD_NFC], true)
 			AC_DEFINE(WITH_NFC, 1, [build with NFC support])
