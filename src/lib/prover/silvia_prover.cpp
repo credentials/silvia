@@ -67,25 +67,10 @@ void silvia_prover::prove
 	std::vector<mpz_class>* ext_a_tilde /* = NULL */
 )
 {
-	size_t irma_kludge_dec_r_A 				= 0;
-	size_t irma_kludge_dec_v_prime_tilde 	= 0;
-	
-	if (SYSPAR(irma_kludge_enabled))
-	{
-		size_t r_A_mul_e_bits = SYSPAR(l_n) + SYSPAR(l_statzk) + SYSPAR(l_e);
-		
-		if (r_A_mul_e_bits >= SYSPAR(l_v))
-		{
-			irma_kludge_dec_r_A = (r_A_mul_e_bits - SYSPAR(l_v)) + 1;
-		}
-		
-		irma_kludge_dec_v_prime_tilde = 8;
-	}
-	
 	// Generate random blinding values
 	mpz_class e_tilde = (ext_e_tilde == NULL) ? silvia_rng::i()->get_random(SYSPAR(l_e_prime) + SYSPAR(l_statzk) + SYSPAR(l_H)) : *ext_e_tilde;
-	mpz_class v_prime_tilde = (ext_v_prime_tilde == NULL) ? silvia_rng::i()->get_random(SYSPAR(l_v) + SYSPAR(l_statzk) + SYSPAR(l_H) - irma_kludge_dec_v_prime_tilde) : *ext_v_prime_tilde;
-	mpz_class r_A = (ext_r_A == NULL) ? silvia_rng::i()->get_random(SYSPAR(l_n) + SYSPAR(l_statzk) - irma_kludge_dec_r_A) : *ext_r_A;
+	mpz_class v_prime_tilde = (ext_v_prime_tilde == NULL) ? silvia_rng::i()->get_random(SYSPAR(l_v) + SYSPAR(l_statzk) + SYSPAR(l_H)) : *ext_v_prime_tilde;
+	mpz_class r_A = (ext_r_A == NULL) ? silvia_rng::i()->get_random(SYSPAR(l_n) + SYSPAR(l_statzk)) : *ext_r_A;
 	
 	std::vector<mpz_class> a_tilde;
 	std::vector<size_t> R_index; // will hold references to the index in the R bases used in the ZKPs for unrevealed attributes
@@ -197,7 +182,6 @@ void silvia_prover::prove
 	
 	// Compute v'
 	mpz_class v_prime = credential->get_v() - (credential->get_e() * r_A);
-	mpz_class dec_factor = (credential->get_e() * r_A);
 	
 	// Compute e^
 	e_hat = e_tilde + (c * e_prime);

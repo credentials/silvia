@@ -173,22 +173,6 @@ public:
 	size_t get_rabin_miller_its();
 	
 	/**
-	 * Enable/disable the IRMA kludge that reduces the size of certain
-	 * blinding values to prevent large answers in proofs and negative
-	 * values in proofs.
-	 * 
-	 * By default, this kludge is turned off
-	 * @param enable set to true to enable the kludge
-	 */
-	void set_irma_kludge(bool enable);
-	
-	/**
-	 * Check if the IRMA kludge is enabled
-	 * @return true if the kludge should be enabled
-	 */
-	bool get_irma_kludge_enabled();
-	
-	/**
 	 * Reset system parameters to default values
 	 */
 	void reset();
@@ -211,7 +195,6 @@ private:
 	size_t l_pt;
 	size_t rabin_miller_its;
 	std::string hash_type;
-	bool irma_kludge;
 };
 
 #endif // !_SILVIA_PARAMETERS_H
