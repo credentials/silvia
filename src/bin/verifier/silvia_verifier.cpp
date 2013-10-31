@@ -204,6 +204,77 @@ bytestring bs2str(const bytestring& in)
 	return out;
 }
 
+bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& commands, std::vector<bytestring>& results, bool force_pin)
+{
+	printf("Communicating with the card... "); fflush(stdout);
+		
+	bool comm_ok = true;
+	size_t cmd_ctr = 0;
+	
+	for (std::vector<bytestring>::iterator i = commands.begin(); (i != commands.end()) && comm_ok; i++)
+	{	
+		bytestring result;
+		
+		if (!card->transmit(*i, result))
+		{
+			comm_ok = false;
+			break;
+		}
+		
+		cmd_ctr++;
+		
+		if ((force_pin) && (cmd_ctr == 1))
+		{
+			if (!verify_pin(card))
+			{
+				comm_ok = false;
+				break;
+			}
+			
+			printf("Communicating with the card... "); fflush(stdout);
+		}
+		else if (result.substr(result.size() - 2) == "6982")
+		{
+			// The card wants us to enter a PIN before producing the proof
+			if (!verify_pin(card))
+			{
+				comm_ok = false;
+				break;
+			}
+			
+			printf("Communicating with the card... "); fflush(stdout);
+			
+			// Re-execute the command
+			if (!card->transmit(*i, result))
+			{
+				comm_ok = false;
+				break;
+			}
+		}
+		else if ((result.substr(result.size() - 2) != "9000") && 
+		         (result.substr(result.size() - 2) != "6A82") &&
+		         (result.substr(result.size() - 2) != "6D00"))
+		{
+			printf("(0x%s) ", result.substr(result.size() - 2).hex_str().c_str());
+			comm_ok = false;
+			break;
+		}
+		
+		results.push_back(result);
+	}
+	
+	if (comm_ok)
+	{
+		printf("OK\n");
+	}
+	else
+	{
+		printf("FAILED!\n");
+	}
+	
+	return comm_ok;
+}
+
 void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::string issuer_pubkey, bool force_pin, int channel_type)
 {
 	silvia_card_channel* card = NULL;
@@ -278,123 +349,88 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 			
 		printf("OK\n");
 		
-		// Get card commands
-		std::vector<bytestring> commands = verifier.get_proof_commands();
-		
-		// Send the commands to the card
-		printf("Communicating with the card... "); fflush(stdout);
-		
+		// First, perform application selection
+		std::vector<bytestring> commands;
 		std::vector<bytestring> results;
 		
-		bool comm_ok = true;
-		size_t cmd_ctr = 0;
+		commands = verifier.get_select_commands();
 		
-		for (std::vector<bytestring>::iterator i = commands.begin(); i != commands.end(); i++)
-		{	
-			bytestring result;
-			
-			if (!card->transmit(*i, result))
-			{
-				comm_ok = false;
-				break;
-			}
-			
-			cmd_ctr++;
-			
-			if ((force_pin) && (cmd_ctr == 1))
-			{
-				if (!verify_pin(card))
-				{
-					comm_ok = false;
-					break;
-				}
-				
-				printf("Communicating with the card... "); fflush(stdout);
-			}
-			else if (result.substr(result.size() - 2) == "6982")
-			{
-				// The card wants us to enter a PIN before producing the proof
-				if (!verify_pin(card))
-				{
-					comm_ok = false;
-					break;
-				}
-				
-				printf("Communicating with the card... "); fflush(stdout);
-				
-				// Re-execute the command
-				if (!card->transmit(*i, result))
-				{
-					comm_ok = false;
-					break;
-				}
-			}
-			else if (result.substr(result.size() - 2) != "9000")
-			{
-				printf("(0x%s) ", result.substr(result.size() - 2).hex_str().c_str());
-				comm_ok = false;
-				break;
-			}
-			
-			results.push_back(result);
-		}
-		
-		if (comm_ok)
+		if (communicate_with_card(card, commands, results, false))
 		{
-			printf("OK\n");
-			printf("Verifying proof... "); fflush(stdout);
-			
-			std::vector<std::pair<std::string, bytestring> > revealed;
-			
-			if (verifier.submit_and_verify(results, revealed))
+			if (verifier.submit_select_data(results))
 			{
-				printf("OK\n");
+				// Now, perform the actual verification
+				commands.clear();
+				results.clear();
 				
-				printf("\n");
+				commands = verifier.get_proof_commands();
 				
-				if (revealed.size() > 0)
+				if (communicate_with_card(card, commands, results, force_pin))
 				{
-					printf("Revealed attributes:\n\n");
+					printf("Verifying proof... "); fflush(stdout);
+				
+					std::vector<std::pair<std::string, bytestring> > revealed;
 					
-					printf("Attribute           |Value\n");
-					printf("--------------------+-----------------------------------------------------------\n");
-					
-					std::vector<std::pair<std::string, bytestring> >::iterator i = revealed.begin();
-					
-					// Check if the first attribute is "expires"
-					if (i->first == "expires")
+					if (verifier.submit_and_verify(results, revealed))
 					{
-						time_t expires = (i->second[i->second.size() - 2] << 8) + (i->second[i->second.size() - 1]);
-						expires *= 86400; // convert days to seconds
+						printf("OK\n");
 						
-						struct tm* date = gmtime(&expires);
+						printf("\n");
 						
-						printf("%-20s|%s %s %d %d\n", i->first.c_str(),
-							weekday[date->tm_wday],
-							month[date->tm_mon],
-							date->tm_mday,
-							date->tm_year + 1900);
-						
-						i++;
+						if (revealed.size() > 0)
+						{
+							printf("Revealed attributes:\n\n");
+							
+							printf("Attribute           |Value\n");
+							printf("--------------------+-----------------------------------------------------------\n");
+							
+							std::vector<std::pair<std::string, bytestring> >::iterator i = revealed.begin();
+							
+							// Check if the first attribute is "expires"
+							if (i->first == "expires")
+							{
+								time_t expires = (i->second[i->second.size() - 2] << 8) + (i->second[i->second.size() - 1]);
+								expires *= 86400; // convert days to seconds
+								
+								struct tm* date = gmtime(&expires);
+								
+								printf("%-20s|%s %s %d %d\n", i->first.c_str(),
+									weekday[date->tm_wday],
+									month[date->tm_mon],
+									date->tm_mday,
+									date->tm_year + 1900);
+								
+								i++;
+							}
+							
+							// Assume the other attributes are strings
+							for (; i != revealed.end(); i++)
+							{
+								printf("%-20s|%-59s\n", i->first.c_str(), (const char*) bs2str(i->second).byte_str());
+							}
+							
+							printf("\n");
+						}
 					}
-					
-					// Assume the other attributes are strings
-					for (; i != revealed.end(); i++)
+					else
 					{
-						printf("%-20s|%-59s\n", i->first.c_str(), (const char*) bs2str(i->second).byte_str());
+						printf("FAILED\n");
 					}
-					
-					printf("\n");
+				}
+				else
+				{
+					verifier.abort();
 				}
 			}
 			else
 			{
-				printf("FAILED\n");
+				printf("Failed to select IRMA application!\n");
+				
+				verifier.abort();
 			}
 		}
 		else
 		{
-			printf("FAILED\n");
 			verifier.abort();
 		}
 		

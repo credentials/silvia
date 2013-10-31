@@ -59,11 +59,7 @@ silvia_irma_verifier::~silvia_irma_verifier()
 	delete verifier;
 }
 
-/**
- * Get the command sequence for generating a proof
- * @return the command sequence for generating a proof (empty if in the wrong state)
- */
-std::vector<bytestring> silvia_irma_verifier::get_proof_commands()
+std::vector<bytestring> silvia_irma_verifier::get_select_commands()
 {
 	assert(irma_verifier_state == IRMA_VERIFIER_START);
 	
@@ -73,7 +69,87 @@ std::vector<bytestring> silvia_irma_verifier::get_proof_commands()
 	// Step 1: select application
 	////////////////////////////////////////////////////////////////////
 	
-	commands.push_back("00A404000849524D416361726400");
+	commands.push_back("00A404000849524D416361726400");		// version < 0.8
+	commands.push_back("00A4040009F849524D416361726400");	// version >= 0.8
+	
+	irma_verifier_state = IRMA_VERIFIER_WAIT_SELECT;
+	
+	return commands;
+}
+
+bool silvia_irma_verifier::submit_select_data(std::vector<bytestring>& results)
+{
+	assert(irma_verifier_state == IRMA_VERIFIER_WAIT_SELECT);
+	
+	// Check that the number of responses matches what we expect
+	if (results.size() != 2)
+	{
+		irma_verifier_state = IRMA_VERIFIER_START;
+		
+		verifier->reset();
+		
+		return false;
+	}
+	
+	////////////////////////////////////////////////////////////////////
+	// Check status words for all results
+	////////////////////////////////////////////////////////////////////
+	
+	for (std::vector<bytestring>::iterator i = results.begin(); i != results.end(); i++)
+	{
+		if ((i->substr(i->size() - 2) != "9000") && 
+		    (i->substr(i->size() - 2) != "6A82") &&
+		    (i->substr(i->size() - 2) != "6D00"))
+		{
+			irma_verifier_state = IRMA_VERIFIER_START;
+		
+			verifier->reset();
+		
+			return false;
+		}
+	}
+	
+	////////////////////////////////////////////////////////////////////
+	// Check IRMA card application version
+	////////////////////////////////////////////////////////////////////
+	
+	// FIXME: actually parse this data rather than assuming the version
+	//        number based on the length of the data
+	bytestring irma_version_info;
+	
+	for (std::vector<bytestring>::iterator i = results.begin(); i != results.end(); i++)
+	{
+		if (i->substr(i->size() - 2) == "9000")
+		{
+			irma_version_info = i->substr(0, i->size() - 2);
+			
+			break;
+		}
+	}
+	
+	if (irma_version_info.size() == 0)
+	{
+		return false;	// No data?!
+	}
+	else if (irma_version_info.size() == 4)
+	{
+		irma_card_version = IRMA_VERSION_0_7_X;
+	}
+	else
+	{
+		irma_card_version = IRMA_VERSION_0_8_X;
+	}
+	
+	irma_verifier_state = IRMA_VERIFIER_SELECTED;
+	
+	return true;
+}
+
+std::vector<bytestring> silvia_irma_verifier::get_proof_commands()
+{
+	assert(irma_verifier_state == IRMA_VERIFIER_SELECTED);
+	
+	std::vector<bytestring> commands;
 	
 	////////////////////////////////////////////////////////////////////
 	// Step 2: start proof
@@ -109,10 +185,27 @@ std::vector<bytestring> silvia_irma_verifier::get_proof_commands()
 	while (context.size() < (SYSPAR(l_H)/8)) context = "00" + context;
 	
 	silvia_apdu prove_apdu(0x80, 0x20, 0x00, 0x00);
-	prove_apdu.append_data(id);
-	prove_apdu.append_data(context);
-	prove_apdu.append_data(D);
-	prove_apdu.append_data(timestamp);
+	
+	if (irma_card_version <= IRMA_VERSION_0_7_X)
+	{
+		prove_apdu.append_data(id);
+		prove_apdu.append_data(context);
+		prove_apdu.append_data(D);
+		prove_apdu.append_data(timestamp);
+	}
+	else if (irma_card_version <= IRMA_VERSION_0_8_X)
+	{
+		/* Ordering changed from 0.7.x to 0.8.x */
+		prove_apdu.append_data(id);
+		prove_apdu.append_data(D);
+		prove_apdu.append_data(context);
+		prove_apdu.append_data(timestamp);
+	}
+	else
+	{
+		// NOT IMPLEMENTED!
+		assert(false);
+	}
 	
 	commands.push_back(prove_apdu.get_apdu());
 	
@@ -165,12 +258,12 @@ std::vector<bytestring> silvia_irma_verifier::get_proof_commands()
  * @param revealed the revealed attributes as pairs of (id, value)
  * @return true if the proof verified correctly, false otherwise
  */
-bool silvia_irma_verifier::submit_and_verify(std::vector<bytestring> results, std::vector<std::pair<std::string, bytestring> >& revealed)
+bool silvia_irma_verifier::submit_and_verify(std::vector<bytestring>& results, std::vector<std::pair<std::string, bytestring> >& revealed)
 {
 	assert(irma_verifier_state == IRMA_VERIFIER_WAIT_ANSWER);
 	
 	// Check that the number of responses matches what we expect
-	if (results.size() != 6 + vspec->get_D().size() + 1)
+	if (results.size() != 5 + vspec->get_D().size() + 1)
 	{
 		irma_verifier_state = IRMA_VERIFIER_START;
 		
@@ -200,28 +293,28 @@ bool silvia_irma_verifier::submit_and_verify(std::vector<bytestring> results, st
 	// Retrieve generic values from command results
 	
 	////////////////////////////////////////////////////////////////////
-	// result[2]: c
+	// result[1]: c
 	////////////////////////////////////////////////////////////////////
 	
-	mpz_class c = MPZ_FROM_RESULT(2);
+	mpz_class c = MPZ_FROM_RESULT(1);
 	
 	////////////////////////////////////////////////////////////////////
-	// result[3]: A'
+	// result[2]: A'
 	////////////////////////////////////////////////////////////////////
 	
-	mpz_class A_prime = MPZ_FROM_RESULT(3);
+	mpz_class A_prime = MPZ_FROM_RESULT(2);
 	
 	////////////////////////////////////////////////////////////////////
-	// result[4]: e^
+	// result[3]: e^
 	////////////////////////////////////////////////////////////////////
 	
-	mpz_class e_hat = MPZ_FROM_RESULT(4);
+	mpz_class e_hat = MPZ_FROM_RESULT(3);
 	
 	////////////////////////////////////////////////////////////////////
-	// result[5]: v'^
+	// result[4]: v'^
 	////////////////////////////////////////////////////////////////////
 	
-	mpz_class v_prime_hat = MPZ_FROM_RESULT(5);
+	mpz_class v_prime_hat = MPZ_FROM_RESULT(4);
 	
 	// Retrieve hidden master secret and hidden and revealed attributes
 	
@@ -229,18 +322,18 @@ bool silvia_irma_verifier::submit_and_verify(std::vector<bytestring> results, st
 	std::vector<silvia_attribute*> a_i;
 	
 	////////////////////////////////////////////////////////////////////
-	// result[6]: s^ (aka a[0]^)
+	// result[5]: s^ (aka a[0]^)
 	////////////////////////////////////////////////////////////////////
 	
-	mpz_class s_hat = MPZ_FROM_RESULT(6);
+	mpz_class s_hat = MPZ_FROM_RESULT(5);
 	
 	a_i_hat.push_back(s_hat);
 	
 	////////////////////////////////////////////////////////////////////
-	// results[7-...] hidden and revealed attributes
+	// results[6-...] hidden and revealed attributes
 	////////////////////////////////////////////////////////////////////
 	
-	size_t ri = 7;
+	size_t ri = 6;
 	size_t ai = 0;
 	
 	for (std::vector<bool>::iterator i = vspec->get_D().begin(); i != vspec->get_D().end(); i++, ri++, ai++)

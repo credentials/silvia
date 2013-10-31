@@ -43,6 +43,12 @@
 #include <vector>
 #include <utility>
 
+/*
+ * Card versions
+ */
+#define IRMA_VERSION_0_7_X		7
+#define	IRMA_VERSION_0_8_X		8
+
 /**
  * IRMA verifier class
  */
@@ -63,6 +69,18 @@ public:
 	~silvia_irma_verifier();
 	
 	/**
+	 * Get the select command sequence
+	 * @return the command sequence for selecting the IRMA card application
+	 */
+	std::vector<bytestring> get_select_commands();
+	
+	/**
+	 * Submit and verify the select command return values
+	 * @return true if the IRMA application was selected successfully and is supported
+	 */
+	bool submit_select_data(std::vector<bytestring>& results);
+	
+	/**
 	 * Get the command sequence for generating a proof
 	 * @return the command sequence for generating a proof (empty if in the wrong state)
 	 */
@@ -74,7 +92,7 @@ public:
 	 * @param revealed the revealed attributes as pairs of (id, value)
 	 * @return true if the proof verified correctly, false otherwise
 	 */
-	bool submit_and_verify(std::vector<bytestring> results, std::vector<std::pair<std::string, bytestring> >& revealed);
+	bool submit_and_verify(std::vector<bytestring>& results, std::vector<std::pair<std::string, bytestring> >& revealed);
 	
 	/**
 	 * Abort a verification (call if card processing fails); discards internal state
@@ -87,10 +105,13 @@ private:
 	silvia_verifier* verifier;
 	silvia_verifier_specification* vspec;
 	bytestring context;
+	int irma_card_version;
 	
 	enum
 	{
 		IRMA_VERIFIER_START,
+		IRMA_VERIFIER_WAIT_SELECT,
+		IRMA_VERIFIER_SELECTED,
 		IRMA_VERIFIER_WAIT_ANSWER
 	}
 	irma_verifier_state;
