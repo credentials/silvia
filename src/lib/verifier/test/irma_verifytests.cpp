@@ -109,21 +109,32 @@ void irma_verify_tests::test_verify_irma_proof_cmdgen()
 	
 	silvia_irma_verifier verifier(&pubkey, &vspec);
 	
-	std::vector<bytestring> commands = verifier.get_proof_commands();
+	std::vector<bytestring> commands = verifier.get_select_commands();
 	
-	CPPUNIT_ASSERT(commands.size() == 12);
+	CPPUNIT_ASSERT(commands.size() == 2);
+	
 	CPPUNIT_ASSERT(commands[0] == "00A404000849524D416361726400");
-	CPPUNIT_ASSERT(commands[1].substr(0, 7) == "8020000028000A");
-	CPPUNIT_ASSERT(commands[1].substr(39, 2) == "0012");
-	CPPUNIT_ASSERT(commands[2].substr(0, 5) == "802A00000A");
-	CPPUNIT_ASSERT(commands[3] == "802B0100");
-	CPPUNIT_ASSERT(commands[4] == "802B0200");
-	CPPUNIT_ASSERT(commands[5] == "802B0300");
-	CPPUNIT_ASSERT(commands[6] == "802C0000");
-	CPPUNIT_ASSERT(commands[7] == "802C0100");
-	CPPUNIT_ASSERT(commands[8] == "802C0200");
-	CPPUNIT_ASSERT(commands[9] == "802C0300");
-	CPPUNIT_ASSERT(commands[10] == "802C0400");
-	CPPUNIT_ASSERT(commands[11] == "802C0500");
+	CPPUNIT_ASSERT(commands[1] == "00A4040009F849524D416361726400");
+	
+	std::vector<bytestring> results;
+	results.push_back("6A82");
+	results.push_back("0102030405060708099000");
+	
+	CPPUNIT_ASSERT(verifier.submit_select_data(results));
+	
+	commands = verifier.get_proof_commands();
+	
+	CPPUNIT_ASSERT(commands.size() == 11);
+	CPPUNIT_ASSERT(commands[0].substr(0, 9) == "8020000028000A0012");
+	CPPUNIT_ASSERT(commands[1].substr(0, 5) == "802A00000A");
+	CPPUNIT_ASSERT(commands[2] == "802B0100");
+	CPPUNIT_ASSERT(commands[3] == "802B0200");
+	CPPUNIT_ASSERT(commands[4] == "802B0300");
+	CPPUNIT_ASSERT(commands[5] == "802C0000");
+	CPPUNIT_ASSERT(commands[6] == "802C0100");
+	CPPUNIT_ASSERT(commands[7] == "802C0200");
+	CPPUNIT_ASSERT(commands[8] == "802C0300");
+	CPPUNIT_ASSERT(commands[9] == "802C0400");
+	CPPUNIT_ASSERT(commands[10] == "802C0500");
 }
 
