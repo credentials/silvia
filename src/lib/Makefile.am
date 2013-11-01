@@ -58,5 +58,3 @@ if BUILD_TESTS
 SUBDIRS +=			test
 endif
 
-EXTRA_DIST =			$(srcdir)/*.h
-
