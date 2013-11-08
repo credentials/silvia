@@ -14,3 +14,7 @@ SUBDIRS += verifier
 endif
 endif
 endif
+# And only build the command line MULTOS application loader if we have PC/SC support!
+if BUILD_PCSC
+SUBDIRS += loader
+endif
