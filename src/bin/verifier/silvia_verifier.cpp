@@ -102,8 +102,8 @@ void usage(void)
 	printf(" [-P] [-N]");
 #endif // WITH_PCSC && WITH_NFC
 	printf("\n");
-	printf("\tsilvia_keygen -h\n");
-	printf("\tsilvia_keygen -v\n");
+	printf("\tsilvia_verifier -h\n");
+	printf("\tsilvia_verifier -v\n");
 	printf("\n");
 	printf("\t-I <issuer-spec>   Read issuer specification from <issuer-spec>\n");
 	printf("\t-V <verifier-spec> Read verifier specification from <verifier-spec>\n");
