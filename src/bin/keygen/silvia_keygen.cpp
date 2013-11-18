@@ -42,6 +42,9 @@
 // Default modulus size for new keys
 #define DEFAULT_BITSIZE 2048
 
+// Default base URI
+#define DEFAULT_BASE_URI "http://www.irmacard.org/credentials/"
+
 void version(void)
 {
 	printf("The Simple Library for Verifying and Issuing Attributes (silvia)\n");
@@ -58,7 +61,7 @@ void usage(void)
 {
 	printf("Silvia issuer key generation utility %s\n\n", VERSION);
 	printf("Usage:\n");
-	printf("\tsilvia_keygen -a <#-attribs> [-n <bits>] [-p <file>] [-P <file>]\n");
+	printf("\tsilvia_keygen -a <#-attribs> [-n <bits>] [-p <file>] [-P <file>] [-u <URI>]\n");
 	printf("\tsilvia_keygen -h\n");
 	printf("\tsilvia_keygen -v\n");
 	printf("\n");
@@ -68,13 +71,14 @@ void usage(void)
 	printf("\t               to %d)\n", DEFAULT_BITSIZE);
 	printf("\t-p <file>      Output the public key to <file> (defaults to stdout)\n");
 	printf("\t-P <file>      Output the private key to <file> (defaults to stdout)\n");
+	printf("\t-u <URI>       Base URI used to reference other Idemix files (defaults to http://www.irmacard.org/credentials/)\n");
 	printf("\n");
 	printf("\t-h             Print this help message\n");
 	printf("\n");
 	printf("\t-v             Print the version number\n");
 }
 
-int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, unsigned long num_attribs, unsigned long bit_size)
+int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, std::string base_URI, unsigned long num_attribs, unsigned long bit_size)
 {
 	printf("Generating %lu-bit issuer key pair for %lu attributes ... ", bit_size, num_attribs); fflush(stdout);
 	
@@ -93,7 +97,7 @@ int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, unsigned long num
 	fprintf(pub_key_file, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 	fprintf(pub_key_file, "<IssuerPublicKey xmlns=\"http://www.zurich.ibm.com/security/idemix\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.zurich.ibm.com/security/idemix IssuerPublicKey.xsd\">\n");
 	fprintf(pub_key_file, "  <References>\n");
-    fprintf(pub_key_file, "    <GroupParameters>http://www.zurich.ibm.com/security/idmx/v2/gp.xml</GroupParameters>\n");
+    fprintf(pub_key_file, ("    <GroupParameters>" + base_URI + "gp.xml</GroupParameters>\n").c_str());
 	fprintf(pub_key_file, "  </References>\n");
 	fprintf(pub_key_file, "  <Elements>\n");
     fprintf(pub_key_file, "    <S>"); fprintmpzdec(pub_key_file, pub_key->get_S()); fprintf(pub_key_file, "</S>\n");
@@ -117,7 +121,7 @@ int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, unsigned long num
 	fprintf(priv_key_file, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 	fprintf(priv_key_file, "<IssuerPrivateKey xmlns=\"http://www.zurich.ibm.com/security/idemix\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.zurich.ibm.com/security/idemix IssuerPrivateKey.xsd\">\n");
 	fprintf(priv_key_file, "  <References>\n");
-    fprintf(priv_key_file, "    <IssuerPublicKey>http://www.issuer.com/ipk.xml</IssuerPublicKey>\n");
+    fprintf(priv_key_file, ("    <IssuerPublicKey>" + base_URI + "ipk.xml</IssuerPublicKey>\n").c_str());
 	fprintf(priv_key_file, "  </References>\n");
 	fprintf(priv_key_file, "  <Elements>\n");
     fprintf(priv_key_file, "    <n>"); fprintmpzdec(priv_key_file, pub_key->get_n()); fprintf(priv_key_file, "</n>\n");
@@ -141,9 +145,10 @@ int main(int argc, char* argv[])
 	unsigned long num_attribs = 0;
 	std::string pub_key_filename;
 	std::string priv_key_filename;
+	std::string base_URI = DEFAULT_BASE_URI;
 	int c = 0;
 	
-	while ((c = getopt(argc, argv, "a:n:p:P:hv")) != -1)
+	while ((c = getopt(argc, argv, "a:n:p:P:u:hv")) != -1)
 	{
 		switch (c)
 		{
@@ -164,6 +169,9 @@ int main(int argc, char* argv[])
 			break;
 		case 'P':
 			priv_key_filename = std::string(optarg);
+			break;
+		case 'u':
+			base_URI = std::string(optarg);
 			break;
 		}
 	}
@@ -206,7 +214,7 @@ int main(int argc, char* argv[])
 		printf("Writing private key to %s\n", priv_key_filename.c_str());
 	}
 	
-	generate_key_pair(pub_key_file, priv_key_file, num_attribs, bit_size);
+	generate_key_pair(pub_key_file, priv_key_file, base_URI, num_attribs, bit_size);
 	
 	if (!pub_key_filename.empty()) fclose(pub_key_file);
 	if (!priv_key_filename.empty()) fclose(priv_key_file);
