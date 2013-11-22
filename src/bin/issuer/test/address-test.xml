@@ -1,0 +1,27 @@
+<CredentialIssueSpecification>
+	<Name>Address</Name>
+	<IssuerID>MijnOverheid</IssuerID>
+
+	<Id>11</Id>
+
+	<Expires>180</Expires> <!-- specified in days relative to date of issuance -->
+
+	<Attributes>
+		<Attribute type="string">
+			<Name>country</Name>
+			<Value>The Netherlands</Value>
+		</Attribute>
+		<Attribute type="string">
+			<Name>city</Name>
+			<Value>Nijmegen</Value>
+		</Attribute>
+		<Attribute type="string">
+			<Name>street</Name>
+			<Value>Heijendaalseweg 135</Value>
+		</Attribute>
+		<Attribute type="string">
+			<Name>zipcode</Name>
+			<Value>6525 AJ</Value>
+		</Attribute>
+	</Attributes>
+</CredentialIssueSpecification>
