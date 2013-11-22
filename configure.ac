@@ -10,7 +10,7 @@ dnl
 
 define([SILVIA_VERSION_MAJOR], [0])
 define([SILVIA_VERSION_MINOR], [2])
-define([SILVIA_VERSION_BUILDREV], [0])
+define([SILVIA_VERSION_BUILDREV], [1])
 define([PACKAGE_SUFFIX], [])
 
 # Library version

@@ -56,6 +56,8 @@ const char* weekday[7] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday
 
 const char* month[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
+#define IRMA_VERIFIER_METADATA_OFFSET				(32 - 6)
+
 void signal_handler(int signal)
 {
 	// Exit on any signal we receive and handle
@@ -387,18 +389,58 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 							std::vector<std::pair<std::string, bytestring> >::iterator i = revealed.begin();
 							
 							// Check if the first attribute is "expires"
-							if (i->first == "expires")
+							if ((i->first == "expires") || (i->first == "metadata"))
 							{
-								time_t expires = (i->second[i->second.size() - 2] << 8) + (i->second[i->second.size() - 1]);
-								expires *= 86400; // convert days to seconds
+								// Check if this is an "old style" expires or a "new style" expires attribute
+								time_t expires;
 								
-								struct tm* date = gmtime(&expires);
+								if (i->second[IRMA_VERIFIER_METADATA_OFFSET] != 0x00)
+								{
+									// Check metadata version number
+									if (i->second[IRMA_VERIFIER_METADATA_OFFSET] != 0x01)
+									{
+										printf("Invalid metadata attribute found!\n");
+									}
+									else
+									{
+										// Reconstruct expiry data from metadata
+										expires = 0;
+										expires += i->second[IRMA_VERIFIER_METADATA_OFFSET + 1] << 16;
+										expires += i->second[IRMA_VERIFIER_METADATA_OFFSET + 2] << 8;
+										expires += i->second[IRMA_VERIFIER_METADATA_OFFSET + 3];
+										
+										expires *= 86400; // convert days to seconds
+										struct tm* date = gmtime(&expires);
+										
+										// Reconstruct credential ID as issued from metadata
+										unsigned short issued_id = 0;
+										
+										issued_id += i->second[IRMA_VERIFIER_METADATA_OFFSET + 4] << 8;
+										issued_id += i->second[IRMA_VERIFIER_METADATA_OFFSET + 5];
+										
+										printf("%-20s|%d (%s)\n", "credential ID", issued_id, (issued_id == vspec->get_credential_id()) ? "matches" : "DOES NOT MATCH");
+										
+										printf("%-20s|%s %s %d %d\n", i->first.c_str(),
+											weekday[date->tm_wday],
+											month[date->tm_mon],
+											date->tm_mday,
+											date->tm_year + 1900);
+									}
+								}
+								else
+								{
+									// This is old style
+									expires = (i->second[i->second.size() - 2] << 8) + (i->second[i->second.size() - 1]);
+									expires *= 86400; // convert days to seconds
 								
-								printf("%-20s|%s %s %d %d\n", i->first.c_str(),
-									weekday[date->tm_wday],
-									month[date->tm_mon],
-									date->tm_mday,
-									date->tm_year + 1900);
+									struct tm* date = gmtime(&expires);
+									
+									printf("%-20s|%s %s %d %d\n", i->first.c_str(),
+										weekday[date->tm_wday],
+										month[date->tm_mon],
+										date->tm_mday,
+										date->tm_year + 1900);
+								}
 								
 								i++;
 							}
