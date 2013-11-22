@@ -27,54 +27,89 @@
  */
 
 /*****************************************************************************
- silvia_irma_xmlreader.h
+ silvia_issue_spec.h
 
- XML reader that will read and parse the XML file types that are relevant for
- Silvia and the IRMA project
+ Issuing specification for a specific credential
  *****************************************************************************/
 
-#ifndef _SILVIA_IRMA_XMLREADER_H
-#define _SILVIA_IRMA_XMLREADER_H
+#ifndef _SILVIA_ISSUE_SPEC_H
+#define _SILVIA_ISSUE_SPEC_H
 
 #include <gmpxx.h>
 #include "silvia_types.h"
-#include "silvia_verifier_spec.h"
-#include "silvia_issue_spec.h"
 #include <vector>
-#include <memory>
+#include <string>
 
 /**
- * IRMA XML reader class
+ * Credential issue specification class
  */
-class silvia_irma_xmlreader
+ 
+class silvia_issue_specification
 {
 public:
 	/**
-	 * Get the one-and-only instance of the IRMA XML reader object
-	 * @return the one-and-only instance of the IRMA XML reader object
+	 * Constructor -- note: this object will take ownership of
+	 * the attributes specified to the constructor and will destruct
+	 * them upon object destruction.
+	 * @param credential_name the credential name
+	 * @param issuer_name the issuer name
+	 * @param credential_id the credential ID
+	 * @param expires the expiry date
+	 * @param attributes the attributes
 	 */
-	static silvia_irma_xmlreader* i();
-	
-	/**
-	 * Reads issuer and verifier descriptions to create a verifier
-	 * specification that can be used by Silvia
-	 * @param id_file_name File name of the issuer description file
-	 * @param vd_file_name File name of the verifier description file
-	 * @return A new verifier specification object or NULL if reading/parsing of one of the files failed
-	 */
-	silvia_verifier_specification* read_verifier_spec(const std::string id_file_name, const std::string vd_file_name);
+	silvia_issue_specification
+	(
+		std::string credential_name,
+		std::string issuer_name,
+		unsigned short credential_id,
+		int expires,
+		std::vector<silvia_attribute*> attributes
+	);
 
 	/**
-	 * Reads a credential issue specification from file
-	 * @param issue_spec_file_name File name of the credential issue specification
-	 * @return A new issue specification object or NULL if reading/parsing on the file failed
+	 * Destructor
 	 */
-	silvia_issue_specification* read_issue_spec(const std::string issue_spec_file_name);
+	~silvia_issue_specification();
+	
+	/**
+	 * Get the credential name
+	 * @return the credential name
+	 */
+	std::string get_credential_name();
+
+	/**
+	 * Get the issuer name
+	 * @return the issuer name
+	 */
+	std::string get_issuer_name();
+
+	/**
+	 * Get the credential ID
+	 * @return the credential ID
+	 */
+	unsigned short get_credential_id();
+
+	/**
+	 * Get the credential expiry date
+	 * @return the credential expiry date
+	 */
+	int get_expires();
+
+	/**
+	 * Get the credential attributes. Note: it is not safe
+	 * to keep using the attributes after the silvia_issue_specification
+	 * object is destroyed.
+	 * @return the attributes
+	 */
+	std::vector<silvia_attribute*>& get_attributes();
 	
 private:
-	// The one-and-only instance
-	static std::auto_ptr<silvia_irma_xmlreader> _i;
+	std::string credential_name;
+	std::string issuer_name;
+	unsigned short credential_id;
+	int expires;
+	std::vector<silvia_attribute*> attributes;
 };
 
-#endif // !_SILVIA_IRMA_XMLREADER_H
+#endif // !_SILVIA_ISSUE_SPEC_H
 

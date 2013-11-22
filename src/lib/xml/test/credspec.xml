@@ -1,0 +1,27 @@
+<CredentialIssueSpecification>
+	<Name>Minimum age</Name>
+	<IssuerID>MijnOverheid</IssuerID>
+
+	<Id>10</Id>
+
+	<Expires>180</Expires> <!-- specified in days relative to date of issuance -->
+
+	<Attributes>
+		<Attribute type="string">
+			<Name>over12</Name>
+			<Value>yes</Value>
+		</Attribute>
+		<Attribute type="string">
+			<Name>over16</Name>
+			<Value>yes</Value>
+		</Attribute>
+		<Attribute type="string">
+			<Name>over18</Name>
+			<Value>yes</Value>
+		</Attribute>
+		<Attribute type="string">
+			<Name>over21</Name>
+			<Value>yes</Value>
+		</Attribute>
+	</Attributes>
+</CredentialIssueSpecification>

@@ -97,7 +97,7 @@ int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, std::string base_
 	fprintf(pub_key_file, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 	fprintf(pub_key_file, "<IssuerPublicKey xmlns=\"http://www.zurich.ibm.com/security/idemix\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.zurich.ibm.com/security/idemix IssuerPublicKey.xsd\">\n");
 	fprintf(pub_key_file, "  <References>\n");
-    fprintf(pub_key_file, ("    <GroupParameters>" + base_URI + "gp.xml</GroupParameters>\n").c_str());
+    fprintf(pub_key_file, "%s", std::string("    <GroupParameters>" + base_URI + "gp.xml</GroupParameters>\n").c_str());
 	fprintf(pub_key_file, "  </References>\n");
 	fprintf(pub_key_file, "  <Elements>\n");
     fprintf(pub_key_file, "    <S>"); fprintmpzdec(pub_key_file, pub_key->get_S()); fprintf(pub_key_file, "</S>\n");
@@ -121,7 +121,7 @@ int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, std::string base_
 	fprintf(priv_key_file, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 	fprintf(priv_key_file, "<IssuerPrivateKey xmlns=\"http://www.zurich.ibm.com/security/idemix\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.zurich.ibm.com/security/idemix IssuerPrivateKey.xsd\">\n");
 	fprintf(priv_key_file, "  <References>\n");
-    fprintf(priv_key_file, ("    <IssuerPublicKey>" + base_URI + "ipk.xml</IssuerPublicKey>\n").c_str());
+    fprintf(priv_key_file, "%s", std::string("    <IssuerPublicKey>" + base_URI + "ipk.xml</IssuerPublicKey>\n").c_str());
 	fprintf(priv_key_file, "  </References>\n");
 	fprintf(priv_key_file, "  <Elements>\n");
     fprintf(priv_key_file, "    <n>"); fprintmpzdec(priv_key_file, pub_key->get_n()); fprintf(priv_key_file, "</n>\n");

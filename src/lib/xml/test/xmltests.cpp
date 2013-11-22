@@ -41,7 +41,9 @@
 #include "silvia_macros.h"
 #include "silvia_idemix_xmlreader.h"
 #include "silvia_irma_xmlreader.h"
+#include "silvia_bytestring.h"
 #include <stdio.h>
+#include <time.h>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(xml_tests);
 
@@ -92,6 +94,8 @@ void xml_tests::test_idemix_read_privkey()
 	CPPUNIT_ASSERT(priv_key->get_p_prime() == mpz_class("0x63a122c7cc5e8bf549c00a47c458314876e514f72e1752b853f51b048d67968365012b87ee95c6b9daeeaf3c776956d278580d267900715283d325d9cc798dbb"));
 	CPPUNIT_ASSERT(priv_key->get_q()       == mpz_class("0xafc0f247dd7bfa36238ab5119d6e0ef19f46fd13d774103137d4712998f461fa8a753c0d850e178731b1c2839cf0d45f43e6ffa106a1adcb2ab98d3164d9a23f"));
 	CPPUNIT_ASSERT(priv_key->get_q_prime() == mpz_class("0x57e07923eebdfd1b11c55a88ceb70778cfa37e89ebba08189bea3894cc7a30fd453a9e06c2870bc398d8e141ce786a2fa1f37fd08350d6e5955cc698b26cd11f"));
+
+	delete priv_key;
 }
 
 void xml_tests::test_irma_read_verifier_spec()
@@ -114,4 +118,35 @@ void xml_tests::test_irma_read_verifier_spec()
 	CPPUNIT_ASSERT(spec->get_D()[2] == false);
 	CPPUNIT_ASSERT(spec->get_D()[3] == true);
 	CPPUNIT_ASSERT(spec->get_D()[4] == false);
+
+	delete spec;
 }
+
+void xml_tests::test_irma_read_issue_spec()
+{
+	silvia_issue_specification* spec = silvia_irma_xmlreader::i()->read_issue_spec(getDir() + "credspec.xml");
+
+	time_t now = time(NULL);
+	now = now / 86400;
+	now += 180;
+
+	CPPUNIT_ASSERT(spec != NULL);
+
+	CPPUNIT_ASSERT(spec->get_credential_name() == "Minimum age");
+	CPPUNIT_ASSERT(spec->get_issuer_name() == "MijnOverheid");
+	CPPUNIT_ASSERT(spec->get_credential_id() == 10);
+	CPPUNIT_ASSERT(spec->get_expires() == now);
+
+	std::vector<silvia_attribute*> attributes = spec->get_attributes();
+
+	CPPUNIT_ASSERT(attributes.size() == 4);
+
+	for (std::vector<silvia_attribute*>::iterator i = attributes.begin(); i != attributes.end(); i++)
+	{
+		CPPUNIT_ASSERT((*i)->int_rep() == "7955827");
+		CPPUNIT_ASSERT((*i)->bs_rep() == "0000000000000000000000000000000000000000000000000000000000796573");
+	}
+
+	delete spec;
+}
+

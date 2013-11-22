@@ -8,9 +8,11 @@ SUBDIRS = keygen
 if BUILD_XMLCFG
 if BUILD_PCSC
 SUBDIRS += verifier
+SUBDIRS += issuer
 else
 if BUILD_NFC
 SUBDIRS += verifier
+SUBDIRS += issuer
 endif
 endif
 endif

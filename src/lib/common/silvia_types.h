@@ -39,6 +39,8 @@
 #include <vector>
 #include <string>
 
+class bytestring;
+
 /**
  * Issuer public key
  */
@@ -182,6 +184,12 @@ public:
 	 * @return a string with an integer representation of the attribute
 	 */
 	std::string int_rep();
+	
+	/**
+	 * Get a padded bytestring representation
+	 * @return a 0-padded bytestring representation of l_m
+	 */
+	bytestring bs_rep();
 	
 	/**
 	 * Recreate the attribute from the representation

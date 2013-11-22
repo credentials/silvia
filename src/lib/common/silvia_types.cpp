@@ -37,6 +37,7 @@
 #include "silvia_hash.h"
 #include "silvia_macros.h"
 #include "silvia_parameters.h"
+#include "silvia_bytestring.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Issuer public key implementation
@@ -139,6 +140,15 @@ std::string silvia_attribute::int_rep()
 	std::string rv = std::string(int_rep_str);
 	
 	free(int_rep_str);
+	
+	return rv;
+}
+
+bytestring silvia_attribute::bs_rep()
+{
+	bytestring rv(attr_rep);
+	
+	while (rv.size() < (SYSPAR(l_m)/8)) rv = "00" + rv;
 	
 	return rv;
 }

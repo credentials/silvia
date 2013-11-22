@@ -43,12 +43,14 @@ class xml_tests : public CppUnit::TestFixture
 	CPPUNIT_TEST(test_idemix_read_pubkey);
 	CPPUNIT_TEST(test_idemix_read_privkey);
 	CPPUNIT_TEST(test_irma_read_verifier_spec);
+	CPPUNIT_TEST(test_irma_read_issue_spec);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
 	void test_idemix_read_pubkey();
 	void test_idemix_read_privkey();
 	void test_irma_read_verifier_spec();
+	void test_irma_read_issue_spec();
 
 	void setUp();
 	void tearDown();

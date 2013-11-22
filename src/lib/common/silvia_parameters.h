@@ -39,6 +39,8 @@
 
 #define SYSPAR(par) silvia_system_parameters::i()->get_##par()
 
+#define SYSPAR_BYTES(par) ((silvia_system_parameters::i()->get_##par() / 8) + ((silvia_system_parameters::i()->get_##par() % 8) != 0 ? 1 : 0))
+
 /**
  * System parameters (singleton)
  */

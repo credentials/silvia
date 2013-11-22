@@ -93,6 +93,11 @@ public:
 	 * @param r_ext externally supplied value for r (for testing only)
 	 */
 	void prove_signature(mpz_class n2, mpz_class context, mpz_class& c, mpz_class& e_hat, mpz_class* r_ext = NULL);
+	
+	/**
+	 * Reset the issuer state
+	 */
+	void reset();
 
 private:
 	// State

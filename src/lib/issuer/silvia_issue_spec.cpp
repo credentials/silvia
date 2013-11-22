@@ -1,4 +1,4 @@
-/* $Id: issuetests.h 52 2013-07-02 13:16:24Z rijswijk $ */
+/* $Id$ */
 
 /*
  * Copyright (c) 2013 Roland van Rijswijk-Deij
@@ -27,33 +27,60 @@
  */
 
 /*****************************************************************************
- issuetests.cpp
+ silvia_issue_spec.cpp
 
- Test credential issuance
+ Issuing specification for a specific credential
  *****************************************************************************/
 
-#ifndef _SILVIA_ISSUER_ISSUETESTS_H
-#define _SILVIA_ISSUER_ISSUETESTS_H
-
 #include "config.h"
-#include <cppunit/extensions/HelperMacros.h>
-#include "silvia_issuer.h"
-#include "silvia_types.h"
+#include "silvia_issue_spec.h"
 
-class issue_tests : public CppUnit::TestFixture
+silvia_issue_specification::silvia_issue_specification
+(
+	std::string credential_name,
+	std::string issuer_name,
+	unsigned short credential_id,
+	int expires,
+	std::vector<silvia_attribute*> attributes
+)
 {
-	CPPUNIT_TEST_SUITE(issue_tests);
-	CPPUNIT_TEST(test_issuance_irma_testvec);
-	CPPUNIT_TEST(test_irma_issuer);
-	CPPUNIT_TEST_SUITE_END();
+	this->credential_name = credential_name;
+	this->issuer_name = issuer_name;
+	this->credential_id = credential_id;
+	this->expires = expires;
+	this->attributes = attributes;
+}
 
-public:
-	void test_issuance_irma_testvec();
-	void test_irma_issuer();
+silvia_issue_specification::~silvia_issue_specification()
+{
+	for (std::vector<silvia_attribute*>::iterator i = attributes.begin(); i != attributes.end(); i++)
+	{
+		delete *i;
+	}
+}
 
-	void setUp();
-	void tearDown();
-};
+std::string silvia_issue_specification::get_credential_name()
+{
+	return credential_name;
+}
 
-#endif // !_SILVIA_ISSUER_ISSUETESTS_H
+std::string silvia_issue_specification::get_issuer_name()
+{
+	return issuer_name;
+}
+
+unsigned short silvia_issue_specification::get_credential_id()
+{
+	return credential_id;
+}
+
+int silvia_issue_specification::get_expires()
+{
+	return expires;
+}
+
+std::vector<silvia_attribute*>& silvia_issue_specification::get_attributes()
+{
+	return attributes;
+}
 

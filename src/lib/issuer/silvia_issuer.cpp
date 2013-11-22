@@ -88,7 +88,7 @@ bool silvia_issuer::submit_and_verify_commitment(mpz_class context, mpz_class U,
 	// Check length of v'^
 	if (mpz_sizeinbase(_Z(v_prime_hat), 2) > SYSPAR(l_n) + SYSPAR(l_statzk)*2 + SYSPAR(l_H) + 1)
 	{
-		issuer_state = ISSUER_INVALID;
+		reset();
 		
 		return false;
 	}
@@ -141,7 +141,7 @@ bool silvia_issuer::submit_and_verify_commitment(mpz_class context, mpz_class U,
 	// Compare c to c^
 	if (c != c_hat)
 	{
-		issuer_state = ISSUER_INVALID;
+		reset();
 		
 		return false;
 	}
@@ -311,4 +311,12 @@ void silvia_issuer::prove_signature(mpz_class n2, mpz_class context, mpz_class& 
 	
 	// Reduce module p'q'
 	mpz_mod(_Z(e_hat), _Z(e_hat), _Z(privkey->get_n_prime()));
+	
+	reset();
+}
+
+void silvia_issuer::reset()
+{
+	a.clear();
+	issuer_state = ISSUER_START;
 }
