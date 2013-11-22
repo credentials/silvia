@@ -159,7 +159,7 @@ std::vector<bytestring> silvia_irma_verifier::get_proof_commands()
 	mpz_class context_mpz = silvia_rng::i()->get_random(SYSPAR(l_H));
 	context = bytestring(context_mpz);
 	bytestring id;
-	id += (unsigned char) (vspec->get_credential_id() & 0xff00) >> 8;
+	id += (unsigned char) ((vspec->get_credential_id() & 0xff00) >> 8);
 	id += (unsigned char) (vspec->get_credential_id() & 0x00ff);
 	
 	// Build proof specification
