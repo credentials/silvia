@@ -151,7 +151,7 @@ std::vector<bytestring> silvia_irma_issuer::get_issue_commands_round_1()
 	mpz_class context_mpz = silvia_rng::i()->get_random(SYSPAR(l_H));
 	context = bytestring(context_mpz);
 	bytestring id;
-	id += (unsigned char) (ispec->get_credential_id() & 0xff00) >> 8;
+	id += (unsigned char) ((ispec->get_credential_id() & 0xff00) >> 8);
 	id += (unsigned char) (ispec->get_credential_id() & 0x00ff);
 	
 	bytestring attr_count;
