@@ -1,0 +1,19 @@
+<SilviaIssuingScript>
+	<Description>Demonstration issue script</Description>
+
+	<UserPIN>0000</UserPIN>
+
+	<Credentials>
+		<Credential>
+			<IssueSpecification>address-test.xml</IssueSpecification>
+			<IssuerPublicKey>ipk.xml</IssuerPublicKey>
+			<IssuerPrivateKey>isk.xml</IssuerPrivateKey>
+		</Credential>
+
+		<Credential>
+			<IssueSpecification>ageLower-test.xml</IssueSpecification>
+			<IssuerPublicKey>ipk.xml</IssuerPublicKey>
+			<IssuerPrivateKey>isk.xml</IssuerPrivateKey>
+		</Credential>
+	</Credentials>
+</SilviaIssuingScript>

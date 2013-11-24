@@ -45,12 +45,21 @@
 #include "silvia_irma_xmlreader.h"
 #include "silvia_idemix_xmlreader.h"
 #include "silvia_types.h"
+#include "silvia_issuescript.h"
 #include <string>
 #include <iostream>
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>
 #include <signal.h>
+
+static bool debug_output = false;
+
+#define DEBUG_MSG(...)	{ if (debug_output) printf(__VA_ARGS__); }
+
+const char* weekday[7] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+
+const char* month[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
 void signal_handler(int signal)
 {
@@ -93,25 +102,31 @@ void usage(void)
 {
 	printf("Silvia command-line IRMA issuer %s\n\n", VERSION);
 	printf("Usage:\n");
-	printf("\tsilvia_issuer -I <issue-spec> -k <issuer-pubkey> -s <issuer-privkey>");
+	printf("\tsilvia_issuer -I <issue-spec> -k <issuer-pubkey> -s <issuer-privkey> [-d]");
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	printf(" [-P] [-N]");
 #endif // WITH_PCSC && WITH_NFC
 	printf("\n");
+	printf("\tsilvia_issuer -i <issue-script> [-d]\n");
 	printf("\tsilvia_issuer -h\n");
 	printf("\tsilvia_issuer -v\n");
 	printf("\n");
 	printf("\t-I <issue-spec>     Read issue specification from <issue-spec>\n");
 	printf("\t-k <issuer-pubkey>  Read issuer public key from <issuer-pubkey>\n");
 	printf("\t-s <issuer-privkey> Read issuer private key from <issuer-privkey>\n");
+	printf("\t-d                  Print debug output\n");
 #if defined(WITH_PCSC) && defined(WITH_NFC)
-	printf("\t-P                 Use PC/SC for card communication (default)\n");
-	printf("\t-N                 Use NFC for card communication\n");
+	printf("\t-P                  Use PC/SC for card communication (default)\n");
+	printf("\t-N                  Use NFC for card communication\n");
 #endif // WITH_PCSC && WITH_NFC
 	printf("\n");
-	printf("\t-h                 Print this help message\n");
+	printf("\t-i <issue-script>   Issue multiple credentials according to the\n");
+	printf("\t                    specified issuing script <issue-script>\n");
+	printf("\t-d                  Print debug output\n");
 	printf("\n");
-	printf("\t-v                 Print the version number\n");
+	printf("\t-h                  Print this help message\n");
+	printf("\n");
+	printf("\t-v                  Print the version number\n");
 }
 
 std::string get_pin()
@@ -162,7 +177,7 @@ bytestring bs2str(const bytestring& in)
 
 bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& commands, std::vector<bytestring>& results)
 {
-	//printf("Communicating with the card... "); fflush(stdout);
+	printf("Communicating with the card... "); fflush(stdout);
 		
 	bool comm_ok = true;
 	size_t cmd_ctr = 0;
@@ -171,7 +186,7 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 	{	
 		bytestring result;
 		
-		printf("--> %s\n", i->hex_str().c_str());
+		DEBUG_MSG("--> %s\n", i->hex_str().c_str());
 		
 		if (!card->transmit(*i, result))
 		{
@@ -179,7 +194,7 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 			break;
 		}
 		
-		printf("<-- %s\n", result.hex_str().c_str());
+		DEBUG_MSG("<-- %s\n", result.hex_str().c_str());
 		
 		cmd_ctr++;
 		
@@ -205,12 +220,10 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 	return comm_ok;
 }
 
-void do_issue(int channel_type, std::string issue_spec, std::string issuer_pubkey, std::string issuer_privkey)
+bool issue_one_credential(silvia_card_channel* card, std::string issue_spec, std::string issuer_pubkey, std::string issuer_privkey, std::string userPIN)
 {
-	silvia_card_channel* card = NULL;
-	
-	printf("Silvia command-line IRMA issuer %s\n\n", VERSION);
-		
+	bool rv = true;
+
 	// Read configuration files
 	silvia_issue_specification* ispec = silvia_irma_xmlreader::i()->read_issue_spec(issue_spec);
 	
@@ -218,7 +231,7 @@ void do_issue(int channel_type, std::string issue_spec, std::string issuer_pubke
 	{
 		fprintf(stderr, "Failed to read issue specification\n");
 		
-		return;
+		return false;
 	}
 	
 	silvia_pub_key* pubkey = silvia_idemix_xmlreader::i()->read_idemix_pubkey(issuer_pubkey);
@@ -229,7 +242,7 @@ void do_issue(int channel_type, std::string issue_spec, std::string issuer_pubke
 		
 		delete ispec;
 		
-		return;
+		return false;
 	}
 	
 	silvia_priv_key* privkey = silvia_idemix_xmlreader::i()->read_idemix_privkey(issuer_privkey);
@@ -241,12 +254,130 @@ void do_issue(int channel_type, std::string issue_spec, std::string issuer_pubke
 		delete pubkey;
 		delete ispec;
 		
-		return;
+		return false;
 	}
+
+	time_t expires = ispec->get_expires();
+	expires *= 86400;
+
+	struct tm* date = gmtime(&expires);
+
+	printf("================================================================================\n");
+	printf("Issuer:        %s\n", ispec->get_issuer_name().c_str());
+	printf("Credential:    %s\n", ispec->get_credential_name().c_str());
+	printf("Credential ID: %d\n", ispec->get_credential_id());
+
+	if (date != NULL)
+	{
+		printf("Expires:       %s %s %d %d\n", weekday[date->tm_wday],
+			month[date->tm_mon],
+			date->tm_mday,
+			date->tm_year + 1900);
+	}
+	printf("================================================================================\n");
 	
 	// Create issuer object
 	silvia_irma_issuer issuer(pubkey, privkey, ispec);
 	
+	// First, perform application selection
+	std::vector<bytestring> commands;
+	std::vector<bytestring> results;
+	
+	commands = issuer.get_select_commands(userPIN);
+	
+	if (communicate_with_card(card, commands, results))
+	{
+		if (issuer.submit_select_data(results))
+		{
+			// Perform the first round of issuance
+			commands.clear();
+			results.clear();
+			
+			commands = issuer.get_issue_commands_round_1();
+			
+			if (communicate_with_card(card, commands, results))
+			{
+				// Verify the return data of the first round
+				if (issuer.submit_issue_results_round_1(results))
+				{
+					commands.clear();
+					results.clear();
+					
+					commands = issuer.get_issue_commands_round_2();
+					
+					if (communicate_with_card(card, commands, results))
+					{
+						if (issuer.submit_issue_results_round_2(results))
+						{
+							printf("Credential issued successfully\n");
+						}
+						else
+						{
+							printf("Round 2 of issuance FAILED!\n");
+							
+							issuer.abort();
+
+							rv = false;
+						}
+					}
+					else
+					{
+						printf("Failed to communicate with the card, was it removed prematurely?\n");
+				
+						issuer.abort();
+
+						rv = false;
+					}
+				}
+				else
+				{
+					printf("Round 1 of issuance FAILED!\n");
+					
+					issuer.abort();
+
+					rv = false;
+				}
+			}
+			else
+			{
+				printf("Failed to communicate with the card, was it removed prematurely?\n");
+				
+				issuer.abort();
+				
+				rv = false;
+			}
+		}
+		else
+		{
+			printf("Failed to select IRMA application!\n");
+			
+			issuer.abort();
+
+			rv = false;
+		}
+	}
+	else
+	{
+		printf("Failed to communicate with the card, was it removed prematurely?\n");
+		
+		issuer.abort();
+
+		rv = false;
+	}
+	
+	delete ispec;
+	delete pubkey;
+	delete privkey;
+
+	return rv;
+}
+
+void do_issue(int channel_type, std::string issue_spec, std::string issuer_pubkey, std::string issuer_privkey)
+{
+	silvia_card_channel* card = NULL;
+	
+	printf("Silvia command-line IRMA issuer %s\n\n", VERSION);
+
 	// Wait for card
 	printf("\n********************************************************************************\n");
 	printf("Waiting for card");
@@ -290,81 +421,10 @@ void do_issue(int channel_type, std::string issue_spec, std::string issuer_pubke
 	
 	// Ask the user to enter their PIN
 	std::string PIN = get_pin();
-	
-	// First, perform application selection
-	std::vector<bytestring> commands;
-	std::vector<bytestring> results;
-	
-	commands = issuer.get_select_commands(PIN);
-	
-	if (communicate_with_card(card, commands, results))
-	{
-		if (issuer.submit_select_data(results))
-		{
-			// Perform the first round of issuance
-			commands.clear();
-			results.clear();
-			
-			commands = issuer.get_issue_commands_round_1();
-			
-			if (communicate_with_card(card, commands, results))
-			{
-				// Verify the return data of the first round
-				if (issuer.submit_issue_results_round_1(results))
-				{
-					commands.clear();
-					results.clear();
-					
-					commands = issuer.get_issue_commands_round_2();
-					
-					if (communicate_with_card(card, commands, results))
-					{
-						if (issuer.submit_issue_results_round_2(results))
-						{
-							printf("Credential issued successfully\n");
-						}
-						else
-						{
-							printf("Round 2 of issuance FAILED!\n");
-							
-							issuer.abort();
-						}
-					}
-					else
-					{
-						printf("Failed to communicate with the card, was it removed prematurely?\n");
-				
-						issuer.abort();
-					}
-				}
-				else
-				{
-					printf("Round 1 of issuance FAILED!\n");
-					
-					issuer.abort();
-				}
-			}
-			else
-			{
-				printf("Failed to communicate with the card, was it removed prematurely?\n");
-				
-				issuer.abort();
-			}
-		}
-		else
-		{
-			printf("Failed to select IRMA application!\n");
-			
-			issuer.abort();
-		}
-	}
-	else
-	{
-		printf("Failed to communicate with the card, was it removed prematurely?\n");
-		
-		issuer.abort();
-	}
-	
+
+	// Issue the credential
+	issue_one_credential(card, issue_spec, issuer_pubkey, issuer_privkey, PIN);
+
 	printf("Waiting for card to be removed... "); fflush(stdout);
 	
 	while (card->status())
@@ -375,14 +435,103 @@ void do_issue(int channel_type, std::string issue_spec, std::string issuer_pubke
 	printf("OK\n");
 	
 	printf("********************************************************************************\n");
-	
-	//delete card;
-	
-	//delete ispec;
-	//delete pubkey;
-	//delete privkey;
+	delete card;
 }
 
+void execute_issue_script(int channel_type, std::string issue_script)
+{
+	printf("Silvia command-line IRMA issuer %s\n\n", VERSION);
+
+	// Read the issuing script
+	silvia_issuescript script(issue_script);
+
+	if (!script.valid())
+	{
+		printf("Failed to load the issuing script %s\n", issue_script.c_str());
+
+		return;
+	}
+
+	silvia_card_channel* card = NULL;
+	
+	// Wait for card
+	printf("\n********************************************************************************\n");
+	printf("Starting issue script: %s\n\n", script.get_description().c_str());
+	printf("Waiting for card");
+	
+#ifdef WITH_PCSC
+	if (channel_type == SILVIA_CHANNEL_PCSC)
+	{
+		printf(" (PCSC) ..."); fflush(stdout);
+		
+		silvia_pcsc_card* pcsc_card = NULL;
+		
+		if (!silvia_pcsc_card_monitor::i()->wait_for_card(&pcsc_card))
+		{
+			printf("FAILED, exiting\n");
+			
+			exit(-1);
+		}
+		
+		card = pcsc_card;
+	}
+#endif // WITH_PCSC
+#ifdef WITH_NFC
+	if (channel_type == SILVIA_CHANNEL_NFC)
+	{
+		printf(" (NFC) ..."); fflush(stdout);
+		
+		silvia_nfc_card* nfc_card = NULL;
+		
+		if (!silvia_nfc_card_monitor::i()->wait_for_card(&nfc_card))
+		{
+			printf("FAILED, exiting\n");
+			
+			exit(-1);
+		}
+		
+		card = nfc_card;
+	}
+#endif // WITH_NFC
+		
+	printf("OK\n");
+
+	// Issue the credentials specified in the script
+
+	std::vector<std::string>::iterator ispec_it = script.get_issue_specs().begin();
+	std::vector<std::string>::iterator ipks_it = script.get_issuer_ipks().begin();
+	std::vector<std::string>::iterator isks_it = script.get_issuer_isks().begin();
+
+	while ((ispec_it != script.get_issue_specs().end()) &&
+	       (ipks_it != script.get_issuer_ipks().end()) &&
+	       (isks_it != script.get_issuer_isks().end()))
+	{
+		// Issue the credential
+		if (!issue_one_credential(card, *ispec_it, *ipks_it, *isks_it, script.get_user_PIN()))
+		{
+			printf("Failed to issue credential, aborting\n");
+
+			break;
+		}
+
+		ispec_it++;
+		ipks_it++;
+		isks_it++;
+	}
+
+	printf("Waiting for card to be removed... "); fflush(stdout);
+	
+	while (card->status())
+	{
+		usleep(10000);
+	}
+	
+	printf("OK\n");
+	
+	printf("********************************************************************************\n");
+	delete card;
+}
+		
 int main(int argc, char* argv[])
 {
 	// Set library parameters
@@ -392,6 +541,7 @@ int main(int argc, char* argv[])
 	std::string issue_spec;
 	std::string issuer_pubkey;
 	std::string issuer_privkey;
+	std::string issue_script;
 	int c = 0;
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	int channel_type = SILVIA_CHANNEL_PCSC;
@@ -402,9 +552,9 @@ int main(int argc, char* argv[])
 #endif
 	
 #if defined(WITH_PCSC) && defined(WITH_NFC)
-	while ((c = getopt(argc, argv, "I:k:s:hvPN")) != -1)
+	while ((c = getopt(argc, argv, "I:k:s:dhvPN")) != -1)
 #else
-	while ((c = getopt(argc, argv, "I:k:s:hv")) != -1)
+	while ((c = getopt(argc, argv, "I:i:k:s:dhv")) != -1)
 #endif
 	{
 		switch (c)
@@ -417,6 +567,9 @@ int main(int argc, char* argv[])
 			return 0;
 		case 'I':
 			issue_spec = std::string(optarg);
+			break;
+		case 'i':
+			issue_script = std::string(optarg);
 			break;
 		case 'k':
 			issuer_pubkey = std::string(optarg);
@@ -432,27 +585,37 @@ int main(int argc, char* argv[])
 			channel_type = SILVIA_CHANNEL_NFC;
 			break;
 #endif
+		case 'd':
+			debug_output = true;
+			break;
 		}
 	}
 	
-	if (issue_spec.empty())
+	if (issue_spec.empty() && issue_script.empty())
 	{
 		fprintf(stderr, "No issue specification file specified!\n");
 		
 		return -1;
 	}
 	
-	if (issuer_pubkey.empty())
+	if (issuer_pubkey.empty() && !issue_spec.empty() && issue_script.empty())
 	{
 		fprintf(stderr, "No issuer public key file specified!\n");
 		
 		return -1;
 	}
 	
-	if (issuer_privkey.empty())
+	if (issuer_privkey.empty() && !issue_spec.empty() && issue_script.empty())
 	{
 		fprintf(stderr, "No issuer private key file specified!\n");
 		
+		return -1;
+	}
+
+	if (!issue_script.empty() && (!issue_spec.empty() || !issuer_pubkey.empty() || !issuer_privkey.empty()))
+	{
+		fprintf(stderr, "Invalid combination of parameters specified!\n");
+
 		return -1;
 	}
 	
@@ -468,8 +631,15 @@ int main(int argc, char* argv[])
 		signal(SIGABRT, signal_handler);
 	}
 #endif
-	
-	do_issue(channel_type, issue_spec, issuer_pubkey, issuer_privkey);
+
+	if (!issue_script.empty())
+	{
+		execute_issue_script(channel_type, issue_script);
+	}
+	else
+	{
+		do_issue(channel_type, issue_spec, issuer_pubkey, issuer_privkey);
+	}
 	
 	return 0;
 }
