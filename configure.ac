@@ -222,6 +222,7 @@ AC_CONFIG_FILES([
 	src/bin/Makefile
 	src/bin/keygen/Makefile
 	src/bin/verifier/Makefile
+	src/bin/test_verify/Makefile
 	src/bin/loader/Makefile
 	src/bin/issuer/Makefile
 	src/lib/Makefile

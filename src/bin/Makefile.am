@@ -9,6 +9,9 @@ if BUILD_XMLCFG
 if BUILD_PCSC
 SUBDIRS += verifier
 SUBDIRS += issuer
+if BUILD_TESTS
+SUBDIRS += test_verify
+endif
 else
 if BUILD_NFC
 SUBDIRS += verifier
