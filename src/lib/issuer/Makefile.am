@@ -19,7 +19,10 @@ libsilvia_issuer_la_SOURCES =	silvia_issuer_keygen.cpp \
 libsilvia_issuer_la_LIBADD =	
 
 pkginclude_HEADERS =		silvia_issuer.h \
-				silvia_irma_issuer.h
+				silvia_irma_issuer.h \
+				silvia_issuer_keygen.h \
+				silvia_issue_spec.h
+
 
 if BUILD_TESTS
 SUBDIRS =			test

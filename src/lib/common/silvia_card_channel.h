@@ -35,7 +35,6 @@
 #ifndef _SILVIA_CARD_CHANNEL_H
 #define _SILVIA_CARD_CHANNEL_H
 
-#include "config.h"
 #include <string>
 #include "silvia_bytestring.h"
 
