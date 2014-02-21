@@ -178,7 +178,11 @@ bool verify_pin(silvia_card_channel* card)
 		
 		return true;
 	}
-	else if ((sw >= 0x63C0) && (sw <= 0x63CF))
+	else if (sw == 0x63C0)
+	{
+		printf("FAILED, the card has been blocked (entered wrong PIN too many times)\n");
+	}
+	else if ((sw > 0x63C0) && (sw <= 0x63CF))
 	{
 		printf("FAILED (%u attempts remaining)\n", sw - 0x63C0);
 	}
