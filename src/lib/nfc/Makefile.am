@@ -13,6 +13,9 @@ libsilvia_nfc_la_SOURCES =	silvia_nfc_card.h \
 
 libsilvia_nfc_la_LIBADD =	
 
+pkginclude_HEADERS =		silvia_nfc_card.h
+
+
 if BUILD_TESTS
 SUBDIRS =			test
 endif

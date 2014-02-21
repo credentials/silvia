@@ -13,6 +13,8 @@ libsilvia_pcsc_la_SOURCES =	silvia_pcsc_card.h \
 
 libsilvia_pcsc_la_LIBADD =	
 
+pkginclude_HEADERS =		silvia_pcsc_card.h
+
 if BUILD_TESTS
 SUBDIRS =			test
 endif

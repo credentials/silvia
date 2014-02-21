@@ -32,9 +32,8 @@
  Smart card communication classes
  *****************************************************************************/
  
-#include "config.h"
-#include "silvia_bytestring.h"
-#include "silvia_card_channel.h"
+#include <silvia_bytestring.h>
+#include <silvia_card_channel.h>
 #include <PCSC/winscard.h>
 #include <PCSC/wintypes.h>
 #include <memory>
