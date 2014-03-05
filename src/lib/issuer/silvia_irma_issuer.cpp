@@ -247,7 +247,7 @@ std::vector<bytestring> silvia_irma_issuer::get_issue_commands_round_1()
 	expires_and_metadata += (unsigned char)  (expires & 0x000000ff);
 	
 	// Add credential ID
-	expires_and_metadata += (unsigned char) (ispec->get_credential_id() & 0xff00) >> 8;
+	expires_and_metadata += (unsigned char) ((ispec->get_credential_id() & 0xff00) >> 8);
 	expires_and_metadata += (unsigned char) (ispec->get_credential_id() & 0x00ff);
 	
 	metadata_attribute = new silvia_integer_attribute(expires_and_metadata.mpz_val());
