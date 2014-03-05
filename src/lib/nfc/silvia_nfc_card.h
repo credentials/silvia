@@ -32,7 +32,6 @@
  Smart card communication classes
  *****************************************************************************/
  
-#include "config.h"
 #include "silvia_bytestring.h"
 #include "silvia_card_channel.h"
 #include <nfc/nfc.h>

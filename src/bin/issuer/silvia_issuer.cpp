@@ -200,7 +200,16 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 		
 		if (result.substr(result.size() - 2) != "9000")
 		{
-			printf("(0x%s) ", result.substr(result.size() - 2).hex_str().c_str());
+			// Return values between 63C0--63CF indicate a wrong PIN
+			const unsigned int PIN_attempts = ((result.substr(result.size() - 2) ^ "63C0")[0] << 8) | ((result.substr(result.size() - 2) ^ "63C0")[1]);
+			if (PIN_attempts <= 0xF)
+			{
+				printf("wrong PIN, %u attempts remaining ", PIN_attempts);
+			}
+			else
+			{
+				printf("(0x%s) ", result.substr(result.size() - 2).hex_str().c_str());
+			}
 			comm_ok = false;
 			break;
 		}
