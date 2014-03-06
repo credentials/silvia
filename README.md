@@ -1,5 +1,3 @@
-$Id: README 42 2013-06-20 12:47:04Z rijswijk $
-
 Copyright (c) 2013 Roland van Rijswijk-Deij
 
 All rights reserved. This software is distributed under a BSD-style
@@ -8,6 +6,9 @@ license. For more information, see LICENSE
 1. INTRODUCTION
 ===============
 
+Silvia is a C++ implementation of the IRMA card communication
+protocol.  The software can be used to issue credentials to an IRMA
+card and can verify already issued credentials.
 
 2. PREREQUISITES
 ================
@@ -48,10 +49,20 @@ If you are root (administrative user), run:
 5. USING THE LIBRARY
 ====================
 
+To issue a credential, execute the following command:
+
+    silvia_issue -I src/bin/issuer/test/ageLower-test.xml -k src/bin/issuer/test/ipk.xml -s src/bin/issuer/test/isk.xml
+
+In order to verify the just issued credential, you need to get the
+necessary files from [credentials/irma_configuration](https://github.com/credentials/irma_configuration).
+Once you have the right files you can verify the credential with the
+following command:
+
+    silvia_verifier -I irma_configuration/MijnOverheid/Issues/ageLower/description.xml -V irma_configuration/MijnOverheid/Verifies/ageLowerAll/description.xml -k irma_configuration/MijnOverheid/ipk.xml
 
 6. CONTACT
 ==========
 
 Questions/remarks/suggestions/praise on this tool can be sent to:
 
-Roland van Rijswijk-Deij <rijswijk@cs.ru.nl, roland@mazuki.nl>
+Roland van Rijswijk-Deij <rijswijk@cs.ru.nl>, <roland@mazuki.nl>
