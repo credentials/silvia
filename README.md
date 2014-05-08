@@ -15,8 +15,10 @@ card and can verify already issued credentials.
 
 To build the library:
 
- - GMP (>= 5.0), the GNU Multiple Precision Arithmetic Library
- - OpenSSL (>= 0.9.8), the Open Source toolkit for SSL/TLS
+ - GMP (>= 5.0), [ the GNU Multiple Precision Arithmetic Library ](https://gmplib.org/)
+ - OpenSSL (>= 0.9.8), [ the Open Source toolkit for SSL/TLS ](http://www.openssl.org/)
+ - libnfc (>= 1.7.0-rc8), [ the Public platform independent Near Field Communication (NFC) library ](http://nfc-tools.org/index.php?title=Libnfc)
+ - libxml2 (>= 2.0), [ the XML C parser and toolkit ](http://xmlsoft.org/)
 
 To run the tests:
 
