@@ -22,7 +22,7 @@ To build the library:
 
 To run the tests:
 
- - CppUnit (>= 1.10), the C++ port of JUnit
+ - CppUnit (>= 1.10), [ the C++ port of JUnit ](http://sourceforge.net/apps/mediawiki/cppunit/index.php?title=Main_Page)
 
 3. BUILDING
 ===========
