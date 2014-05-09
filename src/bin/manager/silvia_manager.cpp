@@ -199,7 +199,7 @@ void usage(void)
 {
 	printf("Silvia command-line IRMA manager %s\n\n", VERSION);
 	printf("Usage:\n");
-	printf("\tsilvia_manager [-lrac] <credential>");
+	printf("\tsilvia_manager [-lrac] [<credential>]");
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	printf(" [-P] [-N]");
 #endif // WITH_PCSC && WITH_NFC
