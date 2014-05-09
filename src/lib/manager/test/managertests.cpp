@@ -38,6 +38,11 @@
 #include <string>
 #include <gmpxx.h>
 #include <time.h>
+#include <iostream>  
+#include <sstream>
+#include <iterator>
+#include <iomanip>
+
 #include "managertests.h"
 #include "silvia_issuer.h"
 #include "silvia_types.h"
@@ -56,16 +61,30 @@ void manager_tests::tearDown()
 {
 }
 
-
 void manager_tests::test_irma_manager()
 {
 
-	std::string PIN = "000000";
+        std::stringstream ss;
+        
+        // Generate a 6-digit random PIN
+        srand (time(NULL));
+        ss << rand() % 900000 + 100000;
+        std::string PIN = ss.str();
+                                        
+        std::ostringstream PIN_hex;
+        PIN_hex << std::setw(2) << std::setfill('0') << std::hex << std::uppercase;
+        std::copy(PIN.begin(), PIN.end(), std::ostream_iterator<unsigned int>(PIN_hex));
+                                                                
 	silvia_irma_manager irma_manager;
+	
 	std::vector<bytestring> commands = irma_manager.get_log_commands(PIN);
 
 	CPPUNIT_ASSERT(commands[0] == "00A4040009F849524D416361726400"); // select
-	CPPUNIT_ASSERT(commands[1] == "00200001083030303030300000"); // VERIFY APDU
+
+	std::stringstream verify_apdu;
+	verify_apdu << "0020000108" << PIN_hex.str() << "0000";
+
+	CPPUNIT_ASSERT(commands[1] == verify_apdu.str().c_str()); // VERIFY APDU
 	CPPUNIT_ASSERT(commands[2] == "803B0000"); // LOG #1
 	CPPUNIT_ASSERT(commands[3] == "803B0F00"); // LOG #2
 }
