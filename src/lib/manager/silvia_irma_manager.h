@@ -2,6 +2,7 @@
 
 /*
  * Copyright (c) 2014 Antonio de la Piedra
+ * Copyright (c) 2013 Roland van Rijswijk-Deij
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

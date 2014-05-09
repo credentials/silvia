@@ -1,6 +1,7 @@
 /* $Id: issuetests.cpp 54 2013-07-04 12:04:51Z rijswijk $ */
 
 /*
+ * Copyright (c) 2014 Antonio de la Piedra
  * Copyright (c) 2013 Roland van Rijswijk-Deij
  * All rights reserved.
  * 
@@ -55,20 +56,13 @@ void manager_tests::tearDown()
 {
 }
 
-void manager_tests::test_issuance_irma_testvec()
-{
-}
 
-void manager_tests::test_irma_issuer()
+void manager_tests::test_irma_manager()
 {
 
 	std::string PIN = "000000";
 	silvia_irma_manager irma_manager;
 	std::vector<bytestring> commands = irma_manager.get_log_commands(PIN);
-
-	std::string t1 = commands[1].hex_str();
-
-	std::cout << t1 << std::endl;
 
 	CPPUNIT_ASSERT(commands[0] == "00A4040009F849524D416361726400"); // select
 	CPPUNIT_ASSERT(commands[1] == "00200001083030303030300000"); // VERIFY APDU

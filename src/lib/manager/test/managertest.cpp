@@ -1,6 +1,7 @@
 /* $Id: issuertest.cpp 52 2013-07-02 13:16:24Z rijswijk $ */
 
 /*
+ * Copyright (c) 2014 Antonio de la Piedra
  * Copyright (c) 2013 Roland van Rijswijk-Deij
  * All rights reserved.
  * 

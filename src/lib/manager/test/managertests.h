@@ -1,6 +1,7 @@
 /* $Id: issuetests.h 52 2013-07-02 13:16:24Z rijswijk $ */
 
 /*
+ * Copyright (c) 2014 Antonio de la Piedra
  * Copyright (c) 2013 Roland van Rijswijk-Deij
  * All rights reserved.
  * 
@@ -43,13 +44,11 @@
 class manager_tests : public CppUnit::TestFixture
 {
 	CPPUNIT_TEST_SUITE(manager_tests);
-	CPPUNIT_TEST(test_issuance_irma_testvec);
-	CPPUNIT_TEST(test_irma_issuer);
+	CPPUNIT_TEST(test_irma_manager);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
-	void test_issuance_irma_testvec();
-	void test_irma_issuer();
+	void test_irma_manager();
 
 	void setUp();
 	void tearDown();
