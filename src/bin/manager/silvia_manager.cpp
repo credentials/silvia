@@ -73,65 +73,25 @@ const int IDX_ACTION = 8;
 const int IDX_CREDENTIAL = 9;  
 const int IDX_SELECTION = 11;
 
-const unsigned char ACTION_NONE = 0x00;
-const unsigned char ACTION_ISSUE = 0x01;
-const unsigned char ACTION_PROVE = 0x02;
-const unsigned char ACTION_REMOVE = 0x03;
-
-/* Based on:
-   http://forums.codeguru.com/showthread.php?316299-C-General-What-are-different-number-representations
-*/
-
-void string_to_vector(std::string str, std::vector<int> &array)
-{
-	int length = str.length();
-
-	if(length%2 == 1)
-	{
-		str = "0" + str;
-		length++;
-	}
-
-	array.reserve(length/2);
-	
-	std::stringstream sstr(str);
-	for(int i=0; i < length/2; i++)
-	{
-		char ch1, ch2;
-		int dig1, dig2;
-
-		sstr >> ch1 >> ch2;
-		
-		if (isdigit(ch1)) 
-			dig1 = ch1 - '0';
-		else if (ch1>='A' && ch1<='F') 
-			dig1 = ch1 - 'A' + 10;
-		else if (ch1>='a' && ch1<='f') 
-			dig1 = ch1 - 'a' + 10;
-		if (isdigit(ch2)) 
-			dig2 = ch2 - '0';
-		else if (ch2>='A' && ch2<='F') 
-			dig2 = ch2 - 'A' + 10;
-		else if (ch2>='a' && ch2<='f') 
-			dig2 = ch2 - 'a' + 10;
-		
-		array.push_back(dig1*16 + dig2);
-	}
-}
+const char ACTION_NONE = '0';
+const char ACTION_ISSUE = '1';
+const char ACTION_PROVE = '2';
+const char ACTION_REMOVE = '3';
 
 /* 
-   print_log_entry(std::string) is based on IdemixLogEntry, 
-   Copyright (C) Wouter Lueks, Radboud University Nijmegen, March 2013.
+   print_log_entry is based on IdemixLogEntry
+   by Wouter Lueks, Radboud University Nijmegen, March 2013.
 */
 
 void print_log_entry(int n, std::string e) 
 {
-	std::vector<int> array;
-	string_to_vector(e.c_str(), array);
+	std::vector<char> array(e.begin(), e.end());
 
 	printf("Entry %d: ", n);
 
-	switch(array[IDX_ACTION]) 
+	char action = array[IDX_ACTION*2 + 1];
+
+	switch(action) 
 	{
 		case ACTION_PROVE:
 			printf("VERIFICATION\n");
@@ -145,7 +105,6 @@ void print_log_entry(int n, std::string e)
 		case ACTION_NONE:
                         printf("-- EMPTY ENTRY --\n");
 			break;
-
 		default:
 			break;	
 	}
@@ -154,21 +113,21 @@ void print_log_entry(int n, std::string e)
 	std::string credential = e.substr(IDX_CREDENTIAL*2, 4);
 	std::string mask = e.substr(IDX_SELECTION*2, 4);
 
-	unsigned int x;   
+	unsigned int tstamp_int;   
 	unsigned int cred_int;   
 
 	std::stringstream ss;
 	ss << std::hex << timestamp;
-	ss >> x;
+	ss >> tstamp_int;
 
 	std::stringstream ss2;
 	ss2 << std::hex << credential;
 	ss2 >> cred_int;
 
-	time_t now = x;
+	time_t now = tstamp_int;
 	char* dt = ctime(&now);
 
-	if (array[IDX_ACTION] == ACTION_PROVE)
+	if (array[IDX_ACTION*2 + 1] == ACTION_PROVE)
 		printf("Policy: %s\n", mask.c_str());	
 			
 	printf("Credential: %d\n", cred_int);
