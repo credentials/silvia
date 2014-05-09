@@ -37,11 +37,12 @@
 
 #include "config.h"
 #include <cppunit/extensions/HelperMacros.h>
+#include "silvia_issuer.h"
 #include "silvia_types.h"
 
-class issue_tests : public CppUnit::TestFixture
+class manager_tests : public CppUnit::TestFixture
 {
-	CPPUNIT_TEST_SUITE(issue_tests);
+	CPPUNIT_TEST_SUITE(manager_tests);
 	CPPUNIT_TEST(test_issuance_irma_testvec);
 	CPPUNIT_TEST(test_irma_issuer);
 	CPPUNIT_TEST_SUITE_END();

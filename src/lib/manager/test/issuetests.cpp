@@ -38,24 +38,40 @@
 #include <gmpxx.h>
 #include <time.h>
 #include "issuetests.h"
+#include "silvia_issuer.h"
 #include "silvia_types.h"
 #include "silvia_parameters.h"
 #include "silvia_macros.h"
+#include "silvia_irma_issuer.h"
+#include "silvia_irma_manager.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION(issue_tests);
+CPPUNIT_TEST_SUITE_REGISTRATION(manager_tests);
 
-void issue_tests::setUp()
+void manager_tests::setUp()
 {
 }
 
-void issue_tests::tearDown()
+void manager_tests::tearDown()
 {
 }
 
-void issue_tests::test_issuance_irma_testvec()
+void manager_tests::test_issuance_irma_testvec()
 {
 }
 
-void issue_tests::test_irma_issuer()
+void manager_tests::test_irma_issuer()
 {
+
+	std::string PIN = "000000";
+	silvia_irma_manager irma_manager;
+	std::vector<bytestring> commands = irma_manager.get_log_commands(PIN);
+
+	std::string t1 = commands[1].hex_str();
+
+	std::cout << t1 << std::endl;
+
+	CPPUNIT_ASSERT(commands[0] == "00A4040009F849524D416361726400"); // select
+	CPPUNIT_ASSERT(commands[1] == "00200001083030303030300000"); // VERIFY APDU
+	CPPUNIT_ASSERT(commands[2] == "803B0000"); // LOG #1
+	CPPUNIT_ASSERT(commands[3] == "803B0F00"); // LOG #2
 }

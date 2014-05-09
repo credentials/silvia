@@ -6,14 +6,13 @@ AM_CPPFLAGS = 			-I$(srcdir)/.. \
 				-I$(srcdir)/../.. \
 				-I$(srcdir)/../../prover \
 				-I$(srcdir)/../../common \
+				-I$(srcdir)/../../issuer \
 				-I$(srcdir)/../../verifier \
 				@CPPUNIT_CFLAGS@
 
 check_PROGRAMS =		managertest
 
 managertest_SOURCES =		managertest.cpp \
-				keygentests.cpp \
-				keygentests.h \
 				issuetests.cpp \
 				issuetests.h
 
