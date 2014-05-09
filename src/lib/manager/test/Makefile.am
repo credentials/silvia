@@ -13,8 +13,8 @@ AM_CPPFLAGS = 			-I$(srcdir)/.. \
 check_PROGRAMS =		managertest
 
 managertest_SOURCES =		managertest.cpp \
-				issuetests.cpp \
-				issuetests.h
+				managertests.cpp \
+				managertests.h
 
 managertest_LDADD =		../../libsilvia_convarch.la @CPPUNIT_LIBS@ @OPENSSL_LIBS@
 

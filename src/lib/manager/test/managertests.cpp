@@ -1,4 +1,4 @@
-/* $Id: issuetests.h 52 2013-07-02 13:16:24Z rijswijk $ */
+/* $Id: issuetests.cpp 54 2013-07-04 12:04:51Z rijswijk $ */
 
 /*
  * Copyright (c) 2013 Roland van Rijswijk-Deij
@@ -32,28 +32,46 @@
  Test credential issuance
  *****************************************************************************/
 
-#ifndef _SILVIA_ISSUER_ISSUETESTS_H
-#define _SILVIA_ISSUER_ISSUETESTS_H
-
-#include "config.h"
+#include <stdlib.h>
 #include <cppunit/extensions/HelperMacros.h>
+#include <string>
+#include <gmpxx.h>
+#include <time.h>
+#include "managertests.h"
 #include "silvia_issuer.h"
 #include "silvia_types.h"
+#include "silvia_parameters.h"
+#include "silvia_macros.h"
+#include "silvia_irma_issuer.h"
+#include "silvia_irma_manager.h"
 
-class manager_tests : public CppUnit::TestFixture
+CPPUNIT_TEST_SUITE_REGISTRATION(manager_tests);
+
+void manager_tests::setUp()
 {
-	CPPUNIT_TEST_SUITE(manager_tests);
-	CPPUNIT_TEST(test_issuance_irma_testvec);
-	CPPUNIT_TEST(test_irma_issuer);
-	CPPUNIT_TEST_SUITE_END();
+}
 
-public:
-	void test_issuance_irma_testvec();
-	void test_irma_issuer();
+void manager_tests::tearDown()
+{
+}
 
-	void setUp();
-	void tearDown();
-};
+void manager_tests::test_issuance_irma_testvec()
+{
+}
 
-#endif // !_SILVIA_ISSUER_ISSUETESTS_H
+void manager_tests::test_irma_issuer()
+{
 
+	std::string PIN = "000000";
+	silvia_irma_manager irma_manager;
+	std::vector<bytestring> commands = irma_manager.get_log_commands(PIN);
+
+	std::string t1 = commands[1].hex_str();
+
+	std::cout << t1 << std::endl;
+
+	CPPUNIT_ASSERT(commands[0] == "00A4040009F849524D416361726400"); // select
+	CPPUNIT_ASSERT(commands[1] == "00200001083030303030300000"); // VERIFY APDU
+	CPPUNIT_ASSERT(commands[2] == "803B0000"); // LOG #1
+	CPPUNIT_ASSERT(commands[3] == "803B0F00"); // LOG #2
+}
