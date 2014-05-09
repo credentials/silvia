@@ -32,17 +32,27 @@
  Credential manager for IRMA cards
  *****************************************************************************/
 
-#ifndef _SILVIA_IRMA_ISSUER_H
-#define _SILVIA_IRMA_ISSUER_H
+#ifndef _SILVIA_IRMA_MANAGER_H
+#define _SILVIA_IRMA_MANAGER_H
 
 #include <gmpxx.h>
 #include <vector>
 #include <utility>
+#include <assert.h>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <ctime>
+#include <unistd.h>
+#include <stdio.h>
+#include <time.h>
+#include <signal.h>
 
 /*
  * Card versions
  */
 #define	IRMA_VERSION_0_8_X		8
+
 
 /**
  * IRMA manager class
@@ -51,6 +61,11 @@
 class silvia_irma_manager
 {
 public:
+
+	static const int LOG_SIZE = 30;
+	static const int LOG_ENTRY_SIZE = 16;
+	static const char LOG_ENTRIES_PER_APDU = 255 / 16;   
+
 	/**
 	 * Constructor
 	 * @param pubkey the manager public key
@@ -72,5 +87,5 @@ public:
 	
 };
 
-#endif // !_SILVIA_IRMA_ISSUER_H
+#endif // !_SILVIA_IRMA_MANAGER_H
 

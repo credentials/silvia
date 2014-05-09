@@ -2,6 +2,7 @@
 
 /*
  * Copyright (c) 2014 Antonio de la Piedra
+ * Copyright (c) 2013 Roland van Rijswijk-Deij
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +35,6 @@
 
 #include "config.h"
 #include "silvia_parameters.h"
-#include "silvia_irma_issuer.h"
 #include "silvia_apdu.h"
 #ifdef WITH_PCSC
 #include "silvia_pcsc_card.h"
@@ -57,14 +57,11 @@
 #include <time.h>
 #include <signal.h>
 
-
 static bool debug_output = false;
 
 #define DEBUG_MSG(...)	{ if (debug_output) printf(__VA_ARGS__); }
 
-const int LOG_SIZE = 30;
-const int LOG_ENTRY_SIZE = 16;
-const char LOG_ENTRIES_PER_APDU = 255 / 16;   
+#define MANAGER_OPT_LOG 0x00
 
 /* Log entries */
 
@@ -81,33 +78,43 @@ const unsigned char ACTION_ISSUE = 0x01;
 const unsigned char ACTION_PROVE = 0x02;
 const unsigned char ACTION_REMOVE = 0x03;
 
-//http://forums.codeguru.com/showthread.php?316299-C-General-What-are-different-number-representations
+/* Based on:
+   http://forums.codeguru.com/showthread.php?316299-C-General-What-are-different-number-representations
+*/
 
 void string_to_vector(std::string str, std::vector<int> &array)
 {
 	int length = str.length();
-	// make sure the input string has an even digit numbers
+
 	if(length%2 == 1)
 	{
 		str = "0" + str;
 		length++;
 	}
 
-	// allocate memory for the output array
 	array.reserve(length/2);
 	
 	std::stringstream sstr(str);
 	for(int i=0; i < length/2; i++)
 	{
 		char ch1, ch2;
-		sstr >> ch1 >> ch2;
 		int dig1, dig2;
-		if(isdigit(ch1)) dig1 = ch1 - '0';
-		else if(ch1>='A' && ch1<='F') dig1 = ch1 - 'A' + 10;
-		else if(ch1>='a' && ch1<='f') dig1 = ch1 - 'a' + 10;
-		if(isdigit(ch2)) dig2 = ch2 - '0';
-		else if(ch2>='A' && ch2<='F') dig2 = ch2 - 'A' + 10;
-		else if(ch2>='a' && ch2<='f') dig2 = ch2 - 'a' + 10;
+
+		sstr >> ch1 >> ch2;
+		
+		if (isdigit(ch1)) 
+			dig1 = ch1 - '0';
+		else if (ch1>='A' && ch1<='F') 
+			dig1 = ch1 - 'A' + 10;
+		else if (ch1>='a' && ch1<='f') 
+			dig1 = ch1 - 'a' + 10;
+		if (isdigit(ch2)) 
+			dig2 = ch2 - '0';
+		else if (ch2>='A' && ch2<='F') 
+			dig2 = ch2 - 'A' + 10;
+		else if (ch2>='a' && ch2<='f') 
+			dig2 = ch2 - 'a' + 10;
+		
 		array.push_back(dig1*16 + dig2);
 	}
 }
@@ -192,15 +199,15 @@ void usage(void)
 {
 	printf("Silvia command-line IRMA manager %s\n\n", VERSION);
 	printf("Usage:\n");
-	printf("\tsilvia_manager [-ilrac] <credential> [-p] <pin> [-u] <old pin> <new pin>");
+	printf("\tsilvia_manager [-lrac] <credential>");
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	printf(" [-P] [-N]");
 #endif // WITH_PCSC && WITH_NFC
 	printf("\n");
-	printf("\tsilvia_manager -l			\t\t\tRead the log of the IRMA card\n");
-	printf("\tsilvia_manager -r <credential> -p <admin pin>	\t\tRemove a credential form the card\n");
-	printf("\tsilvia_manager -a -u [old admin pin] [new admin pin] \t\tUpdate admin pin\n");
-	printf("\tsilvia_manager -c -u [old credential pin] [new credential pin]  Update credential pin\n");
+	printf("\tsilvia_manager -l Read the log of the IRMA card\n");
+	printf("\tsilvia_manager -r <credential> Remove a credential form the card\n");
+	printf("\tsilvia_manager -a Update admin pin\n");
+	printf("\tsilvia_manager -c Update credential pin\n");
 	printf("\n");
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	printf("\t-P                  Use PC/SC for card communication (default)\n");
@@ -243,23 +250,6 @@ std::string get_pin()
 	
 	return PIN;
 }
-/*
-bytestring bs2str(const bytestring& in)
-{
-	bytestring out = in;
-	
-	// Strip leading 00's
-	while ((out.size() > 0) && (out[0] == 0x00))
-	{
-		out = out.substr(1);
-	}
-	
-	// Append null-termination
-	out += 0x00;
-	
-	return out;
-}
-*/
 
 bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& commands, std::vector<bytestring>& results)
 {
@@ -315,46 +305,16 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 	return comm_ok;
 }
 
-bool issue_one_credential(silvia_card_channel* card, std::string userPIN)
+bool read_log(silvia_card_channel* card, std::string userPIN)
 {
 	bool rv = true;
 
 	std::vector<bytestring> commands;
 	std::vector<bytestring> results;
 
+	silvia_irma_manager irma_manager;
 
-	assert(userPIN.size() <= 8);
-	
-	////////////////////////////////////////////////////////////////////
-	// Step 1: select application
-	////////////////////////////////////////////////////////////////////
-	
-	commands.push_back("00A4040009F849524D416361726400");	// version >= 0.8
-	
-	////////////////////////////////////////////////////////////////////
-	// Step 2: verify PIN
-	////////////////////////////////////////////////////////////////////
-	
-	silvia_apdu verify_pin(0x00, 0x20, 0x00, 0x01);
-	
-	bytestring pin_data;
-	pin_data.wipe(8);
-	
-	memcpy(&pin_data[0], userPIN.c_str(), userPIN.size());
-	
-	verify_pin.append_data(pin_data);
-	
-	commands.push_back(verify_pin.get_apdu());
-
-	////////////////////////////////////////////////////////////////////
-	// Step 3: Get log entries
-	////////////////////////////////////////////////////////////////////
-			
-	for (char start_entry = 0x00; start_entry < LOG_SIZE; start_entry = (char)(start_entry + LOG_ENTRIES_PER_APDU))
-	{
-		silvia_apdu get_log_apdu(0x80, 0x3b, start_entry, 0x00);
-		commands.push_back(get_log_apdu.get_apdu());
-	}
+	commands = irma_manager.get_log_commands(userPIN);
 
 	int n_ent = 1;
 	
@@ -362,14 +322,14 @@ bool issue_one_credential(silvia_card_channel* card, std::string userPIN)
 	{
 		int i = 2; // The first two results corresponds to SELECT and VERIFY APDUs.
 	
-		for (char start_entry = 0x00; start_entry < LOG_SIZE; start_entry = (char)(start_entry + LOG_ENTRIES_PER_APDU))
+		for (char start_entry = 0x00; start_entry < irma_manager.LOG_SIZE; start_entry = (char)(start_entry + irma_manager.LOG_ENTRIES_PER_APDU))
 		{
 			std::string entry = results[i].hex_str();
 		
 			
-			for (int j = 0; j < LOG_ENTRIES_PER_APDU; j++)
+			for (int j = 0; j < irma_manager.LOG_ENTRIES_PER_APDU; j++)
 			{
-				std::string e = entry.substr(j*LOG_ENTRY_SIZE*2, LOG_ENTRY_SIZE*2);
+				std::string e = entry.substr(j*irma_manager.LOG_ENTRY_SIZE*2, irma_manager.LOG_ENTRY_SIZE*2);
 				print_log_entry(n_ent++, e);
 			}
 			i++;
@@ -386,11 +346,11 @@ bool issue_one_credential(silvia_card_channel* card, std::string userPIN)
 	return rv;
 }
 
-void do_info(int channel_type)
+void do_manager(int channel_type, int opt)
 {
 	silvia_card_channel* card = NULL;
 	
-	printf("Silvia command-line IRMA issuer %s\n\n", VERSION);
+	printf("Silvia command-line IRMA manager %s\n\n", VERSION);
 
 	// Wait for card
 	printf("\n********************************************************************************\n");
@@ -433,13 +393,15 @@ void do_info(int channel_type)
 		
 	printf("OK\n");
 	
-	// Ask the user to enter their PIN
-	std::string PIN = get_pin();
+	if (opt == MANAGER_OPT_LOG) {
+		// Ask the user to enter their PIN
+		std::string PIN = get_pin();
 
-	//// Issue the credential
-	issue_one_credential(card, PIN);
+		//// Issue the credential
+		read_log(card, PIN);
 
-	printf("OK\n");
+		printf("OK\n");
+	}
 	
 	printf("********************************************************************************\n");
 	delete card;
@@ -504,7 +466,7 @@ int main(int argc, char* argv[])
 #endif
 
 		if (get_log)
-			do_info(channel_type);
+			do_manager(channel_type, MANAGER_OPT_LOG);
 		else {
 			usage();
 			return 0;	

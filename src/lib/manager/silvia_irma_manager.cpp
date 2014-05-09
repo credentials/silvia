@@ -53,6 +53,45 @@ silvia_irma_manager::~silvia_irma_manager()
 
 std::vector<bytestring> silvia_irma_manager::get_log_commands(std::string PIN)
 {
+	bool rv = true;
 
+	std::vector<bytestring> commands;
+	std::vector<bytestring> results;
+
+
+	assert(PIN.size() <= 8);
+	
+	////////////////////////////////////////////////////////////////////
+	// Step 1: select application
+	////////////////////////////////////////////////////////////////////
+	
+	commands.push_back("00A4040009F849524D416361726400");	// version >= 0.8
+	
+	////////////////////////////////////////////////////////////////////
+	// Step 2: verify PIN
+	////////////////////////////////////////////////////////////////////
+	
+	silvia_apdu verify_pin(0x00, 0x20, 0x00, 0x01);
+	
+	bytestring pin_data;
+	pin_data.wipe(8);
+	
+	memcpy(&pin_data[0], PIN.c_str(), PIN.size());
+	
+	verify_pin.append_data(pin_data);
+	
+	commands.push_back(verify_pin.get_apdu());
+
+	////////////////////////////////////////////////////////////////////
+	// Step 3: Get log entries
+	////////////////////////////////////////////////////////////////////
+			
+	for (char start_entry = 0x00; start_entry < LOG_SIZE; start_entry = (char)(start_entry + LOG_ENTRIES_PER_APDU))
+	{
+		silvia_apdu get_log_apdu(0x80, 0x3b, start_entry, 0x00);
+		commands.push_back(get_log_apdu.get_apdu());
+	}
+	
+	return commands;
 }
 
