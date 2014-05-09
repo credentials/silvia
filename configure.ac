@@ -235,6 +235,7 @@ AC_CONFIG_FILES([
 	src/lib/prover/test/Makefile
 	src/lib/verifier/Makefile
 	src/lib/verifier/test/Makefile
+	src/lib/manager/Makefile
 	src/lib/pcsc/Makefile
 	src/lib/pcsc/test/Makefile
 	src/lib/xml/Makefile

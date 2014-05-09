@@ -4,6 +4,7 @@ MAINTAINERCLEANFILES = 		$(srcdir)/Makefile.in
 
 AM_CPPFLAGS = 			-I$(srcdir)/../../lib/common \
 				-I$(srcdir)/../../lib/verifier \
+				-I$(srcdir)/../../lib/manager \
 				-I$(srcdir)/../../lib/xml \
 				-I$(srcdir)/../../lib/issuer \
 				-I$(srcdir)/../../lib \

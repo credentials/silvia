@@ -5,6 +5,7 @@ MAINTAINERCLEANFILES = 		$(srcdir)/Makefile.in
 AM_CPPFLAGS = 			-I$(srcdir)/issuer \
 				-I$(srcdir)/prover \
 				-I$(srcdir)/verifier \
+				-I$(srcdir)/manager \
 				-I$(srcdir)/common
 
 lib_LTLIBRARIES =		libsilvia.la
@@ -12,6 +13,7 @@ lib_LTLIBRARIES =		libsilvia.la
 libsilvia_la_SOURCES =		
 libsilvia_la_LIBADD =		issuer/libsilvia_issuer.la \
 				prover/libsilvia_prover.la \
+				manager/libsilvia_manager.la \
 				verifier/libsilvia_verifier.la \
 				common/libsilvia_common.la 
 
@@ -30,6 +32,7 @@ libsilvia_convarch_la_LIBADD =	$(libsilvia_la_LIBADD)
 SUBDIRS = 			issuer \
 				prover \
 				verifier \
+				manager \
 				common
 
 # Process optional components
