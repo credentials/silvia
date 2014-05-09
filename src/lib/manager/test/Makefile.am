@@ -9,18 +9,18 @@ AM_CPPFLAGS = 			-I$(srcdir)/.. \
 				-I$(srcdir)/../../verifier \
 				@CPPUNIT_CFLAGS@
 
-check_PROGRAMS =		issuertest
+check_PROGRAMS =		managertest
 
-issuertest_SOURCES =		issuertest.cpp \
+managertest_SOURCES =		managertest.cpp \
 				keygentests.cpp \
 				keygentests.h \
 				issuetests.cpp \
 				issuetests.h
 
-issuertest_LDADD =		../../libsilvia_convarch.la @CPPUNIT_LIBS@ @OPENSSL_LIBS@
+managertest_LDADD =		../../libsilvia_convarch.la @CPPUNIT_LIBS@ @OPENSSL_LIBS@
 
-issuertest_LDFLAGS = 		-no-install
+managertest_LDFLAGS = 		-no-install
 
-TESTS = 			issuertest
+TESTS = 			managertest
 
 EXTRA_DIST =			$(srcdir)/*.h
