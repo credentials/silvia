@@ -36,7 +36,6 @@
 #define _SILVIA_ISSUER_KEYGENTESTS_H
 
 #include <cppunit/extensions/HelperMacros.h>
-#include "silvia_issuer_keygen.h"
 
 class keygen_tests : public CppUnit::TestFixture
 {

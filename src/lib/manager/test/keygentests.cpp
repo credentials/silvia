@@ -37,7 +37,6 @@
 #include <string>
 #include <gmpxx.h>
 #include "keygentests.h"
-#include "silvia_issuer_keygen.h"
 #include <stdio.h>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(keygen_tests);
@@ -52,39 +51,5 @@ void keygen_tests::tearDown()
 
 void keygen_tests::test_keygen()
 {
-	return;
-	silvia_pub_key* pub = NULL;
-	silvia_priv_key* priv = NULL;
-
-	printf("k"); fflush(stdout);
-
-	// Generate a key-pair for 5 attributes
-	silvia_issuer_keyfactory::i()->generate_keypair(5, &pub, &priv);
-
-	printf("K"); fflush(stdout);
-
-	// Check properties of the generated private key
-	CPPUNIT_ASSERT(mpz_probab_prime_p(priv->get_p().get_mpz_t(), 40) >= 1);
-	CPPUNIT_ASSERT(mpz_probab_prime_p(priv->get_q().get_mpz_t(), 40) >= 1);
-	CPPUNIT_ASSERT(mpz_probab_prime_p(priv->get_p_prime().get_mpz_t(), 40) >= 1);
-	CPPUNIT_ASSERT(mpz_probab_prime_p(priv->get_q_prime().get_mpz_t(), 40) >= 1);
-
-	// Check properties of the generated public key
-	CPPUNIT_ASSERT(pub->get_R().size() == 5);
-
-	CPPUNIT_ASSERT(mpz_legendre(pub->get_S().get_mpz_t(), priv->get_p().get_mpz_t()) == 1);
-	CPPUNIT_ASSERT(mpz_legendre(pub->get_S().get_mpz_t(), priv->get_q().get_mpz_t()) == 1);
-
-	CPPUNIT_ASSERT(mpz_legendre(pub->get_Z().get_mpz_t(), priv->get_p().get_mpz_t()) == 1);
-	CPPUNIT_ASSERT(mpz_legendre(pub->get_Z().get_mpz_t(), priv->get_q().get_mpz_t()) == 1);
-
-	for (int i = 0; i < 5; i++)
-	{
-		CPPUNIT_ASSERT(mpz_legendre(pub->get_R()[i].get_mpz_t(), priv->get_p().get_mpz_t()) == 1);
-		CPPUNIT_ASSERT(mpz_legendre(pub->get_R()[i].get_mpz_t(), priv->get_q().get_mpz_t()) == 1);
-	}
-
-	delete pub;
-	delete priv;
 }
 

@@ -37,7 +37,6 @@
 
 #include "config.h"
 #include <cppunit/extensions/HelperMacros.h>
-#include "silvia_issuer.h"
 #include "silvia_types.h"
 
 class issue_tests : public CppUnit::TestFixture
