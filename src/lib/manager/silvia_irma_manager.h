@@ -80,9 +80,10 @@ public:
 	~silvia_irma_manager();
 	
 	/**
-	 * Get the select command sequence, with PIN verification based on the specified PIN
-	 * @param PIN the user PIN
-	 * @return the command sequence for selecting the IRMA card application
+	 * Get the command sequence for reading the log of the IRMA card, with 
+	 * PIN verification based on the specified PIN
+	 * @param PIN the administration PIN
+	 * @return the command sequence for reading the log of the IRMA card application
 	 */
 	std::vector<bytestring> get_log_commands(std::string PIN);
 	
