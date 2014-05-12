@@ -2,7 +2,8 @@
 
 MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
-SUBDIRS = keygen
+SUBDIRS = keygen \
+          manager
 
 # Only build the command line verifier if we have PC/SC or NFC and XML support!
 if BUILD_XMLCFG
