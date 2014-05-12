@@ -113,25 +113,21 @@ void print_log_entry(int n, std::string e)
 	std::string credential = e.substr(IDX_CREDENTIAL*2, 4);
 	std::string mask = e.substr(IDX_SELECTION*2, 4);
 
-	unsigned int tstamp_int;   
+	std::stringstream tstamp_ss, cred_ss;
 	unsigned int cred_int;   
+	time_t tstamp_int;
 
-	std::stringstream ss;
-	ss << std::hex << timestamp;
-	ss >> tstamp_int;
+	tstamp_ss << std::hex << timestamp;
+	cred_ss << std::hex << credential;
 
-	std::stringstream ss2;
-	ss2 << std::hex << credential;
-	ss2 >> cred_int;
-
-	time_t now = tstamp_int;
-	char* dt = ctime(&now);
+	tstamp_ss >> tstamp_int;
+	cred_ss >> cred_int;
 
 	if (array[IDX_ACTION*2 + 1] == ACTION_PROVE)
 		printf("Policy: %s\n", mask.c_str());	
 			
 	printf("Credential: %d\n", cred_int);
-	printf("Timestamp: %s\n", dt);
+	printf("Timestamp: %s\n", ctime(&tstamp_int));
 }
             
 void signal_handler(int signal)
