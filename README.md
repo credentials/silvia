@@ -53,7 +53,7 @@ If you are root (administrative user), run:
 
 To issue a credential, execute the following command:
 
-    silvia_issue -I src/bin/issuer/test/ageLower-test.xml -k src/bin/issuer/test/ipk.xml -s src/bin/issuer/test/isk.xml
+    silvia_issuer -I src/bin/issuer/test/ageLower-test.xml -k src/bin/issuer/test/ipk.xml -s src/bin/issuer/test/isk.xml
 
 In order to verify the just issued credential, you need to get the
 necessary files from [credentials/irma_configuration](https://github.com/credentials/irma_configuration).
