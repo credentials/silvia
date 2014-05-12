@@ -86,6 +86,41 @@ public:
 	 * @return the command sequence for reading the log of the IRMA card application
 	 */
 	std::vector<bytestring> get_log_commands(std::string PIN);
+
+	/**
+	 * Get the command sequence for deleting credentials, with 
+	 * PIN verification based on the specified PIN
+	 * @param credential the credential ID
+	 * @param PIN the administration PIN
+	 * @return the command sequence for deleting a certain credential stored
+	 * in the IRMA card
+	 */
+	std::vector<bytestring> del_cred_commands(std::string credential, std::string PIN);
+
+	/**
+	 * Get the command sequence for updating the administration PIN of the IRMA
+	 * card, with PIN verification based on the specified PIN
+	 * @param old_pin the current administration PIN
+	 * @param new_pin the new administration PIN
+	 * @return the command sequence for updating the administration pin of the IRMA card
+	 */
+	std::vector<bytestring> update_admin_pin_commands(std::string old_pin, std::string new_pin);
+
+	/**
+	 * Get the command sequence for updating the credential PIN of the IRMA
+	 * card, with PIN verification based on the specified PIN
+	 * @param old_pin the current credential PIN
+	 * @param new_pin the new credential PIN
+	 * @return the command sequence for updating the credential pin of the IRMA card
+	 */
+	std::vector<bytestring> update_cred_pin_commands(std::string old_pin, std::string new_pin);
+
+	/**
+	 * Get the command sequence for listing the credentials stored in the IRMA card
+	 * @param PIN the administration PIN
+	 * @return the command sequence for listing the credentials stored in the IRMA card
+	 */
+	std::vector<bytestring> list_credentials_commands(std::string PIN);
 	
 };
 
