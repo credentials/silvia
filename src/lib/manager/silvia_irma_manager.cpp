@@ -46,6 +46,7 @@
 
 silvia_irma_manager::silvia_irma_manager()
 {
+	/* XXXX: Not implemented! */
 }
 
 silvia_irma_manager::~silvia_irma_manager()
@@ -96,3 +97,92 @@ std::vector<bytestring> silvia_irma_manager::get_log_commands(std::string PIN)
 	return commands;
 }
 
+std::vector<bytestring> silvia_irma_manager::del_cred_commands(std::string credential, std::string PIN)
+{
+	/* XXXX: Not implemented! */
+}
+
+std::vector<bytestring> silvia_irma_manager::update_admin_pin_commands(std::string old_pin, std::string new_pin)
+{
+
+	bool rv = true;
+
+	std::vector<bytestring> commands;
+	std::vector<bytestring> results;
+
+	assert(old_pin.size() <= 8);
+	assert(new_pin.size() <= 8);
+	
+	////////////////////////////////////////////////////////////////////
+	// Step 1: select application
+	////////////////////////////////////////////////////////////////////
+	
+	commands.push_back("00A4040009F849524D416361726400");	// version >= 0.8
+	
+	////////////////////////////////////////////////////////////////////
+	// Step 2: update admin PIN
+	////////////////////////////////////////////////////////////////////
+	
+	silvia_apdu verify_pin(0x00, 0x24, 0x00, 0x01);
+	
+	bytestring old_pin_data, new_pin_data;
+	old_pin_data.wipe(8);
+	new_pin_data.wipe(8);
+	
+	memcpy(&old_pin_data[0], old_pin.c_str(), old_pin.size());
+	memcpy(&new_pin_data[0], new_pin.c_str(), new_pin.size());
+	
+	verify_pin.append_data(old_pin_data);
+	verify_pin.append_data(new_pin_data);
+	
+	commands.push_back(verify_pin.get_apdu());
+
+	return commands;
+}
+
+std::vector<bytestring> silvia_irma_manager::update_cred_pin_commands(std::string old_pin, std::string new_pin)
+{
+	/* XXXX: Not implemented! */
+}
+
+std::vector<bytestring> silvia_irma_manager::list_credentials_commands(std::string PIN)
+{
+
+	bool rv = true;
+
+	std::vector<bytestring> commands;
+	std::vector<bytestring> results;
+
+	assert(PIN.size() <= 8);
+	
+	////////////////////////////////////////////////////////////////////
+	// Step 1: select application
+	////////////////////////////////////////////////////////////////////
+	
+	commands.push_back("00A4040009F849524D416361726400");	// version >= 0.8
+	
+	////////////////////////////////////////////////////////////////////
+	// Step 2: verify PIN
+	////////////////////////////////////////////////////////////////////
+	
+	silvia_apdu verify_pin(0x00, 0x20, 0x00, 0x01);
+	
+	bytestring pin_data;
+	pin_data.wipe(8);
+	
+	memcpy(&pin_data[0], PIN.c_str(), PIN.size());
+	
+	verify_pin.append_data(pin_data);
+	
+	commands.push_back(verify_pin.get_apdu());
+
+	////////////////////////////////////////////////////////////////////
+	// Step 3: get credentials
+	////////////////////////////////////////////////////////////////////
+
+	silvia_apdu list_credentials(0x80, 0x3A, 0x00, 0x00);
+	
+	commands.push_back(list_credentials.get_apdu());
+	
+	return commands;
+}

@@ -79,6 +79,7 @@ void manager_tests::test_irma_manager()
 	
 	std::vector<bytestring> commands = irma_manager.get_log_commands(PIN);
 
+	CPPUNIT_ASSERT(commands.size() == 4);
 	CPPUNIT_ASSERT(commands[0] == "00A4040009F849524D416361726400"); // select
 
 	std::stringstream verify_apdu;
@@ -87,4 +88,66 @@ void manager_tests::test_irma_manager()
 	CPPUNIT_ASSERT(commands[1] == verify_apdu.str().c_str()); // VERIFY APDU
 	CPPUNIT_ASSERT(commands[2] == "803B0000"); // LOG #1
 	CPPUNIT_ASSERT(commands[3] == "803B0F00"); // LOG #2
+}
+
+void manager_tests::test_irma_list_creds()
+{
+        std::stringstream ss;
+        
+        // Generate a 6-digit random PIN
+        srand (time(NULL));
+        ss << rand() % 900000 + 100000;
+        std::string PIN = ss.str();
+                                        
+        std::ostringstream PIN_hex;
+        PIN_hex << std::setw(2) << std::setfill('0') << std::hex << std::uppercase;
+        std::copy(PIN.begin(), PIN.end(), std::ostream_iterator<unsigned int>(PIN_hex));
+                                                                
+	silvia_irma_manager irma_manager;
+	
+	std::vector<bytestring> commands = irma_manager.list_credentials_commands(PIN);
+
+	CPPUNIT_ASSERT(commands.size() == 3);
+	CPPUNIT_ASSERT(commands[0] == "00A4040009F849524D416361726400"); // select
+
+	std::stringstream verify_apdu;
+	verify_apdu << "0020000108" << PIN_hex.str() << "0000";
+
+	CPPUNIT_ASSERT(commands[1] == verify_apdu.str().c_str()); // VERIFY APDU
+	CPPUNIT_ASSERT(commands[2] == "803A0000"); // GET LIST OF CREDENTIALS
+}
+
+void manager_tests::test_irma_update_admin_pin()
+{
+        std::stringstream ss1, ss2;
+        
+        // Generate two 6-digit random pins
+        srand (time(NULL));
+        
+        ss1 << rand() % 900000 + 100000;
+        ss2 << rand() % 900000 + 100000;
+        
+        std::string old_pin = ss1.str();
+        std::string new_pin = ss2.str();
+                                        
+        std::ostringstream old_pin_hex;
+        std::ostringstream new_pin_hex;
+
+        old_pin_hex << std::setw(2) << std::setfill('0') << std::hex << std::uppercase;
+        new_pin_hex << std::setw(2) << std::setfill('0') << std::hex << std::uppercase;
+        
+        std::copy(old_pin.begin(), old_pin.end(), std::ostream_iterator<unsigned int>(old_pin_hex));
+        std::copy(new_pin.begin(), new_pin.end(), std::ostream_iterator<unsigned int>(new_pin_hex));
+                                                                
+	silvia_irma_manager irma_manager;
+	
+	std::vector<bytestring> commands = irma_manager.update_admin_pin_commands(old_pin, new_pin);
+
+	CPPUNIT_ASSERT(commands.size() == 2);
+	CPPUNIT_ASSERT(commands[0] == "00A4040009F849524D416361726400"); // select
+
+	std::stringstream verify_apdu;
+	verify_apdu << "0024000110" << old_pin_hex.str() << "0000" << new_pin_hex.str() << "0000";
+
+	CPPUNIT_ASSERT(commands[1] == verify_apdu.str().c_str()); // UPDATE ADMIN PIN
 }
