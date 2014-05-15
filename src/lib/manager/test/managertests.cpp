@@ -151,3 +151,35 @@ void manager_tests::test_irma_update_admin_pin()
 
 	CPPUNIT_ASSERT(commands[1] == verify_apdu.str().c_str()); // UPDATE ADMIN PIN
 }
+
+void manager_tests::test_irma_del_cred_commands()
+{
+        std::stringstream ss;
+        
+        // Generate a 6-digit random PIN
+        srand (time(NULL));
+        ss << rand() % 900000 + 100000;
+        std::string PIN = ss.str();
+                                        
+        std::ostringstream PIN_hex;
+        PIN_hex << std::setw(2) << std::setfill('0') << std::hex << std::uppercase;
+        std::copy(PIN.begin(), PIN.end(), std::ostream_iterator<unsigned int>(PIN_hex));
+                                                                
+	silvia_irma_manager irma_manager;
+
+	std::string cred = "11";
+
+	CPPUNIT_ASSERT(cred.size() == 2);
+	
+	std::vector<bytestring> commands = irma_manager.del_cred_commands(cred, PIN);
+
+	CPPUNIT_ASSERT(commands.size() == 4);
+	CPPUNIT_ASSERT(commands[0] == "00A4040009F849524D416361726400"); // select
+
+	std::stringstream verify_apdu;
+	verify_apdu << "0020000108" << PIN_hex.str() << "0000";
+
+	CPPUNIT_ASSERT(commands[1] == verify_apdu.str().c_str()); // VERIFY APDU
+	CPPUNIT_ASSERT(commands[2] == "8030000002000b"); // SELECT CREDENTIAL
+	CPPUNIT_ASSERT(commands[3].substr(0, commands[3].size() - 4) == "8031000004"); // DEL CRED 
+}
