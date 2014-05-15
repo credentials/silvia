@@ -147,6 +147,7 @@ std::vector<bytestring> silvia_irma_manager::del_cred_commands(std::string crede
 	// Step 4: delete credential
 	////////////////////////////////////////////////////////////////////
 
+	/* TODO: Add credential id in P1P2 for logging */
 	ss << std::setfill ('0') << std::setw(4) << std::hex << std::time(0); //timestamp
         std::string cmd_del = std::string("8031000004") + ss.str();               
 
