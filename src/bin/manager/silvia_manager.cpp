@@ -64,6 +64,7 @@ static bool debug_output = false;
 #define MANAGER_OPT_LOG 0x00
 #define MANAGER_OPT_CRED 0x01
 #define MANAGER_OPT_UPDATE_ADMIN 0x02
+#define MANAGER_OPT_DEL_CRED 0x03
 
 /* Log entries */
 
@@ -127,11 +128,13 @@ void print_log_entry(int n, std::string e)
 
 	if (array[IDX_ACTION*2 + 1] == ACTION_PROVE)
 		printf("Policy: %s\n", mask.c_str());	
-			
-	if (array[IDX_ACTION*2 + 1] != ACTION_NONE) {
+					
+	if (array[IDX_ACTION*2 + 1] != ACTION_REMOVE && array[IDX_ACTION*2 + 1] != ACTION_NONE) 
 		printf("Credential: %d\n", cred_int);
+
+	if (array[IDX_ACTION*2 + 1] != ACTION_NONE)
 		printf("Timestamp: %s\n", ctime(&tstamp_int));
-	}
+
 }
             
 void signal_handler(int signal)
@@ -368,7 +371,27 @@ bool update_admin_pin(silvia_card_channel* card, std::string old_pin, std::strin
 	return rv;
 }
 
-void do_manager(int channel_type, int opt)
+bool delete_credential(silvia_card_channel* card, std::string credential, std::string userPIN)
+{
+	bool rv = true;
+
+	std::vector<bytestring> commands;
+	std::vector<bytestring> results;
+
+	silvia_irma_manager irma_manager;
+
+	commands = irma_manager.del_cred_commands(credential, userPIN);
+
+	if (!communicate_with_card(card, commands, results))
+	{
+		printf("Failed to communicate with the card, was it removed prematurely?\n");
+		rv = false;
+	}
+	
+	return rv;
+}
+
+void do_manager(int channel_type, int opt, std::string credential)
 {
 	silvia_card_channel* card = NULL;
 	
@@ -437,6 +460,13 @@ void do_manager(int channel_type, int opt)
 		update_admin_pin(card, old_pin, new_pin);
 
 		printf("OK\n");
+
+	} else if (opt == MANAGER_OPT_DEL_CRED) {
+		// Ask the user to enter their PIN
+		std::string pin = get_pin("Please enter your new administration PIN: ");
+		delete_credential(card, credential, pin);
+
+		printf("OK\n");
 	}
 	
 	printf("********************************************************************************\n");
@@ -446,11 +476,12 @@ void do_manager(int channel_type, int opt)
 int main(int argc, char* argv[])
 {
 
-	//std::string issue_script;
+	std::string credential;
 	int c = 0;
 	int get_log = 0;
 	int get_cred = 0;
 	int update_admin_pin = 0;
+	int del_cred = 0;
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	int channel_type = SILVIA_CHANNEL_PCSC;
 #elif defined(WITH_PCSC)
@@ -460,9 +491,9 @@ int main(int argc, char* argv[])
 #endif
 	
 #if defined(WITH_PCSC) && defined(WITH_NFC)
-	while ((c = getopt(argc, argv, "aslhvPN")) != -1)
+	while ((c = getopt(argc, argv, "r:aslhvPN")) != -1)
 #else
-	while ((c = getopt(argc, argv, "aslhv")) != -1)
+	while ((c = getopt(argc, argv, "r:aslhv")) != -1)
 #endif
 	{
 		switch (c)
@@ -481,6 +512,10 @@ int main(int argc, char* argv[])
 			break;
 		case 'a':
 			update_admin_pin = 1;
+			break;
+		case 'r':
+			del_cred = 1;
+			credential = std::string(optarg);
 			break;
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 		case 'P':
@@ -509,12 +544,14 @@ int main(int argc, char* argv[])
 	}
 #endif
 
-		if (get_log == 1 && get_cred == 0 && update_admin_pin == 0)
-			do_manager(channel_type, MANAGER_OPT_LOG);
-		else if (get_log == 0 && get_cred == 1 && update_admin_pin == 0)
-			do_manager(channel_type, MANAGER_OPT_CRED);
-		else if (get_log == 0 && get_cred == 0 && update_admin_pin == 1)
-			do_manager(channel_type, MANAGER_OPT_UPDATE_ADMIN);
+		if (get_log == 1 && get_cred == 0 && update_admin_pin == 0 && del_cred == 0)
+			do_manager(channel_type, MANAGER_OPT_LOG, "");
+		else if (get_log == 0 && get_cred == 1 && update_admin_pin == 0 && del_cred == 0)
+			do_manager(channel_type, MANAGER_OPT_CRED, "");
+		else if (get_log == 0 && get_cred == 0 && update_admin_pin == 1 && del_cred == 0)
+			do_manager(channel_type, MANAGER_OPT_UPDATE_ADMIN, "");
+		else if (get_log == 0 && get_cred == 0 && update_admin_pin == 0 && del_cred == 1)
+			do_manager(channel_type, MANAGER_OPT_DEL_CRED, credential); 
 		else {
 			usage();
 			return 0;	
