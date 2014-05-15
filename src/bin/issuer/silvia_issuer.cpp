@@ -141,7 +141,7 @@ std::string get_pin()
 	
 	do
 	{ 
-		PIN = getpass("Please enter your PIN: ");
+		PIN = getpass("Please enter your credential PIN: ");
 		
 		if (PIN.size() > 8)
 		{
