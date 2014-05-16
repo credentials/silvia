@@ -128,13 +128,10 @@ void print_log_entry(int n, std::string e)
 
 	if (array[IDX_ACTION*2 + 1] == ACTION_PROVE)
 		printf("Policy: %s\n", mask.c_str());	
-					
-	if (array[IDX_ACTION*2 + 1] != ACTION_REMOVE && array[IDX_ACTION*2 + 1] != ACTION_NONE) 
-		printf("Credential: %d\n", cred_int);
 
 	if (array[IDX_ACTION*2 + 1] != ACTION_NONE)
+		printf("Credential: %d\n", cred_int);
 		printf("Timestamp: %s\n", ctime(&tstamp_int));
-
 }
             
 void signal_handler(int signal)
