@@ -166,7 +166,7 @@ void usage(void)
 #endif // WITH_PCSC && WITH_NFC
 	printf("\n");
 	printf("\tsilvia_manager -l Read the log of the IRMA card\n");
-	printf("\tsilvia_manager -r <credential> Remove a credential form the card\n");
+	printf("\tsilvia_manager -r <credential> Remove a credential stored in the card\n");
 	printf("\tsilvia_manager -a Update admin pin\n");
 	printf("\tsilvia_manager -c Update credential pin\n");
 	printf("\tsilvia_manager -s List the credentials stored in the IRMA card\n");
