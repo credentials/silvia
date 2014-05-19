@@ -121,6 +121,15 @@ public:
 	 * @return the command sequence for listing the credentials stored in the IRMA card
 	 */
 	std::vector<bytestring> list_credentials_commands(std::string PIN);
+
+	/**
+	 * Read the attributes of a credentials stored in the IRMA card
+	 * @param attribute the selected attribute
+	 * @param credential the selected credential
+	 * @param PIN the administration PIN
+	 * @return the command sequence for listing the credentials stored in the IRMA card
+	 */
+	std::vector<bytestring> read_credential_commands(std::string credential, std::string PIN);
 	
 };
 

@@ -107,7 +107,6 @@ std::vector<bytestring> silvia_irma_manager::del_cred_commands(std::string crede
 	std::vector<bytestring> results;
 
 	assert(PIN.size() <= 8);
-	//assert(credential.size() == 2);
 	
 	////////////////////////////////////////////////////////////////////
 	// Step 1: select application
@@ -279,5 +278,61 @@ std::vector<bytestring> silvia_irma_manager::list_credentials_commands(std::stri
 	
 	commands.push_back(list_credentials.get_apdu());
 	
+	return commands;
+}
+
+std::vector<bytestring> silvia_irma_manager::read_credential_commands(std::string credential, std::string PIN)
+{
+
+	bool rv = true;
+
+	std::vector<bytestring> commands;
+	std::vector<bytestring> results;
+
+	assert(PIN.size() <= 8);
+	
+	////////////////////////////////////////////////////////////////////
+	// Step 1: select application
+	////////////////////////////////////////////////////////////////////
+	
+	commands.push_back("00A4040009F849524D416361726400");	// version >= 0.8
+	
+	////////////////////////////////////////////////////////////////////
+	// Step 2: verify PIN
+	////////////////////////////////////////////////////////////////////
+	
+	silvia_apdu verify_pin(0x00, 0x20, 0x00, 0x01);
+	
+	bytestring pin_data;
+	pin_data.wipe(8);
+	
+	memcpy(&pin_data[0], PIN.c_str(), PIN.size());
+	
+	verify_pin.append_data(pin_data);
+	
+	commands.push_back(verify_pin.get_apdu());
+
+	////////////////////////////////////////////////////////////////////
+	// Step 3: select credential
+	////////////////////////////////////////////////////////////////////
+
+	std::stringstream ss;
+
+	ss << std::setfill ('0') << std::setw(4) << std::hex << atoi(credential.c_str());
+        std::string cmd = std::string("8030000002") + ss.str();               
+	commands.push_back(cmd.c_str());
+
+	////////////////////////////////////////////////////////////////////
+	// Step 4: read all the attributes
+	////////////////////////////////////////////////////////////////////
+
+	for (int i = 1; i < 6; i++) {
+         ss.str("");
+         ss.clear(); 
+
+         ss << "80320" << i << "00";
+         commands.push_back(ss.str().c_str());
+	}
+
 	return commands;
 }
