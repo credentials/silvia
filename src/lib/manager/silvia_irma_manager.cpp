@@ -193,9 +193,52 @@ std::vector<bytestring> silvia_irma_manager::update_admin_pin_commands(std::stri
 	return commands;
 }
 
-std::vector<bytestring> silvia_irma_manager::update_cred_pin_commands(std::string old_pin, std::string new_pin)
+std::vector<bytestring> silvia_irma_manager::update_cred_pin_commands(std::string admin_pin, std::string new_pin)
 {
-	/* XXXX: Not implemented! */
+	bool rv = true;
+
+	std::vector<bytestring> commands;
+	std::vector<bytestring> results;
+
+	assert(admin_pin.size() <= 8);
+	assert(new_pin.size() <= 8);
+	
+	////////////////////////////////////////////////////////////////////
+	// Step 1: select application
+	////////////////////////////////////////////////////////////////////
+	
+	commands.push_back("00A4040009F849524D416361726400");	// version >= 0.8
+	
+	////////////////////////////////////////////////////////////////////
+	// Step 2: verify admin_pin
+	////////////////////////////////////////////////////////////////////
+	
+	silvia_apdu verify_pin(0x00, 0x20, 0x00, 0x01);
+	
+	bytestring pin_data;
+	pin_data.wipe(8);
+	
+	memcpy(&pin_data[0], admin_pin.c_str(), admin_pin.size());
+	
+	verify_pin.append_data(pin_data);
+	
+	commands.push_back(verify_pin.get_apdu());
+
+	////////////////////////////////////////////////////////////////////
+	// Step 3: update credential pin
+	////////////////////////////////////////////////////////////////////
+
+	silvia_apdu update_cred_pin(0x00, 0x24, 0x00, 0x00);
+	
+	bytestring cred_pin_data;
+	cred_pin_data.wipe(8);
+	
+	memcpy(&cred_pin_data[0], new_pin.c_str(), new_pin.size());	
+	update_cred_pin.append_data(cred_pin_data);
+	
+	commands.push_back(update_cred_pin.get_apdu());
+	
+	return commands;
 }
 
 std::vector<bytestring> silvia_irma_manager::list_credentials_commands(std::string PIN)
