@@ -97,7 +97,7 @@ where ```ipk.xml``` is the public key of the issuer and ```isk.xml``` contains i
 
 To issue a credential, you can create your own credential description or rely on the definitions
 from [credentials/irma_configuration](https://github.com/credentials/irma_configuration).
-In order to issue a RU student credential with the generated keys in Step 5.1, we use ```silvia_issuer```:
+In order to issue a new credential with the generated keys in Step 5.1, we use ```silvia_issuer```:
 ```
 $ ./silvia_issuer -h
 Silvia command-line IRMA issuer 0.2.2
