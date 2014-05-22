@@ -65,6 +65,8 @@ static bool debug_output = false;
 #define MANAGER_OPT_CRED 0x01
 #define MANAGER_OPT_UPDATE_ADMIN 0x02
 #define MANAGER_OPT_DEL_CRED 0x03
+#define MANAGER_OPT_UPDATE_CRED 0x04
+#define MANAGER_OPT_READ_CRED 0x05
 
 /* Log entries */
 
@@ -128,13 +130,10 @@ void print_log_entry(int n, std::string e)
 
 	if (array[IDX_ACTION*2 + 1] == ACTION_PROVE)
 		printf("Policy: %s\n", mask.c_str());	
-					
-	if (array[IDX_ACTION*2 + 1] != ACTION_REMOVE && array[IDX_ACTION*2 + 1] != ACTION_NONE) 
-		printf("Credential: %d\n", cred_int);
 
 	if (array[IDX_ACTION*2 + 1] != ACTION_NONE)
+		printf("Credential: %d\n", cred_int);
 		printf("Timestamp: %s\n", ctime(&tstamp_int));
-
 }
             
 void signal_handler(int signal)
@@ -161,16 +160,17 @@ void usage(void)
 {
 	printf("Silvia command-line IRMA manager %s\n\n", VERSION);
 	printf("Usage:\n");
-	printf("\tsilvia_manager [-lracs] [<credential>]");
+	printf("\tsilvia_manager [-lracso] [<credential>]");
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	printf(" [-P] [-N]");
 #endif // WITH_PCSC && WITH_NFC
 	printf("\n");
 	printf("\tsilvia_manager -l Read the log of the IRMA card\n");
-	printf("\tsilvia_manager -r <credential> Remove a credential form the card\n");
+	printf("\tsilvia_manager -r <credential> Remove a credential stored in the card\n");
 	printf("\tsilvia_manager -a Update admin pin\n");
 	printf("\tsilvia_manager -c Update credential pin\n");
 	printf("\tsilvia_manager -s List the credentials stored in the IRMA card\n");
+	printf("\tsilvia_manager -o <credential> Read all the attributes of <credential>\n");
 	printf("\n");
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	printf("\t-P                  Use PC/SC for card communication (default)\n");
@@ -371,6 +371,27 @@ bool update_admin_pin(silvia_card_channel* card, std::string old_pin, std::strin
 	return rv;
 }
 
+bool update_cred_pin(silvia_card_channel* card, std::string admin_pin, std::string new_pin)
+{
+	bool rv = true;
+
+	std::vector<bytestring> commands;
+	std::vector<bytestring> results;
+
+	silvia_irma_manager irma_manager;
+
+	commands = irma_manager.update_cred_pin_commands(admin_pin, new_pin);
+
+	if (!communicate_with_card(card, commands, results))
+	{
+		printf("Failed to communicate with the card, was it removed prematurely?\n");
+		
+		rv = false;
+	}
+	
+	return rv;
+}
+
 bool delete_credential(silvia_card_channel* card, std::string credential, std::string userPIN)
 {
 	bool rv = true;
@@ -386,6 +407,44 @@ bool delete_credential(silvia_card_channel* card, std::string credential, std::s
 	{
 		printf("Failed to communicate with the card, was it removed prematurely?\n");
 		rv = false;
+	}
+	
+	return rv;
+}
+
+bool read_credential(silvia_card_channel* card, std::string cred, std::string userPIN)
+{
+	bool rv = true;
+
+	std::vector<bytestring> commands;
+	std::vector<bytestring> results;
+
+	silvia_irma_manager irma_manager;
+
+	commands = irma_manager.read_credential_commands(cred, userPIN); 
+
+	if (!communicate_with_card(card, commands, results))
+	{
+		printf("Failed to communicate with the card, was it removed prematurely?\n");
+		rv = false;
+	} else {
+		for (int i = 3; i < 8; i++) {
+		
+			// remove 0x9000
+			std::string attr_hex = results[i].hex_str().substr(0, results[i].hex_str().size() - 4);;
+
+			// remove 0's
+			std::string::size_type pos =  attr_hex.find_first_not_of('0', 0);
+			if(pos > 0)
+				attr_hex.erase(0,pos); 
+		
+			std::string attr_ascii;
+
+			for (int j = 0; j < attr_hex.length(); j += 2)
+				attr_ascii.push_back(strtol(attr_hex.substr(j, 2).c_str(), NULL, 16));
+		
+			printf("Attribute [%i]: %s\n", (i-2), attr_ascii.c_str());
+		}
 	}
 	
 	return rv;
@@ -461,10 +520,26 @@ void do_manager(int channel_type, int opt, std::string credential)
 
 		printf("OK\n");
 
+	} else if (opt == MANAGER_OPT_UPDATE_CRED) {
+		// Ask the user to enter their PIN
+		std::string admin_pin = get_pin("Please enter your current administration PIN: ");
+		std::string new_pin = get_pin("Please enter your new credential PIN: ");
+
+		update_cred_pin(card, admin_pin, new_pin);
+
+		printf("OK\n");
+
 	} else if (opt == MANAGER_OPT_DEL_CRED) {
 		// Ask the user to enter their PIN
 		std::string pin = get_pin("Please enter your new administration PIN: ");
 		delete_credential(card, credential, pin);
+
+		printf("OK\n");
+
+	} else if (opt == MANAGER_OPT_READ_CRED) {
+		// Ask the user to enter their PIN
+		std::string pin = get_pin("Please enter your new administration PIN: ");
+		read_credential(card, credential, pin);
 
 		printf("OK\n");
 	}
@@ -477,10 +552,15 @@ int main(int argc, char* argv[])
 {
 
 	std::string credential;
+	std::string attribute;
+
 	int c = 0;
+
+	int read_cred = 0;
 	int get_log = 0;
 	int get_cred = 0;
 	int update_admin_pin = 0;
+	int update_cred_pin = 0;
 	int del_cred = 0;
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	int channel_type = SILVIA_CHANNEL_PCSC;
@@ -491,9 +571,9 @@ int main(int argc, char* argv[])
 #endif
 	
 #if defined(WITH_PCSC) && defined(WITH_NFC)
-	while ((c = getopt(argc, argv, "r:aslhvPN")) != -1)
+	while ((c = getopt(argc, argv, "r:caso:lhvPN")) != -1)
 #else
-	while ((c = getopt(argc, argv, "r:aslhv")) != -1)
+	while ((c = getopt(argc, argv, "r:caso:lhv")) != -1)
 #endif
 	{
 		switch (c)
@@ -512,6 +592,13 @@ int main(int argc, char* argv[])
 			break;
 		case 'a':
 			update_admin_pin = 1;
+			break;
+		case 'c':
+			update_cred_pin = 1;
+			break;
+		case 'o':
+			read_cred = 1;
+			credential = std::string(optarg);
 			break;
 		case 'r':
 			del_cred = 1;
@@ -544,14 +631,18 @@ int main(int argc, char* argv[])
 	}
 #endif
 
-		if (get_log == 1 && get_cred == 0 && update_admin_pin == 0 && del_cred == 0)
+		if (get_log == 1 && get_cred == 0 && update_admin_pin == 0 && del_cred == 0 && update_cred_pin == 0 && read_cred == 0)
 			do_manager(channel_type, MANAGER_OPT_LOG, "");
-		else if (get_log == 0 && get_cred == 1 && update_admin_pin == 0 && del_cred == 0)
+		else if (get_log == 0 && get_cred == 1 && update_admin_pin == 0 && del_cred == 0 && update_cred_pin == 0 && read_cred == 0)
 			do_manager(channel_type, MANAGER_OPT_CRED, "");
-		else if (get_log == 0 && get_cred == 0 && update_admin_pin == 1 && del_cred == 0)
+		else if (get_log == 0 && get_cred == 0 && update_admin_pin == 1 && del_cred == 0 && update_cred_pin == 0 && read_cred == 0)
 			do_manager(channel_type, MANAGER_OPT_UPDATE_ADMIN, "");
-		else if (get_log == 0 && get_cred == 0 && update_admin_pin == 0 && del_cred == 1)
+		else if (get_log == 0 && get_cred == 0 && update_admin_pin == 0 && del_cred == 1 && update_cred_pin == 0 && read_cred == 0)
 			do_manager(channel_type, MANAGER_OPT_DEL_CRED, credential); 
+		else if (get_log == 0 && get_cred == 0 && update_admin_pin == 0 && del_cred == 0 && update_cred_pin == 1 && read_cred == 0)
+			do_manager(channel_type, MANAGER_OPT_UPDATE_CRED, ""); 
+		else if (get_log == 0 && get_cred == 0 && update_admin_pin == 0 && del_cred == 0 && update_cred_pin == 0 && read_cred == 1)
+			do_manager(channel_type, MANAGER_OPT_READ_CRED, credential); 
 		else {
 			usage();
 			return 0;	

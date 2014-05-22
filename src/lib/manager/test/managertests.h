@@ -48,6 +48,8 @@ class manager_tests : public CppUnit::TestFixture
 	CPPUNIT_TEST(test_irma_list_creds);
 	CPPUNIT_TEST(test_irma_update_admin_pin);
 	CPPUNIT_TEST(test_irma_del_cred_commands);
+	CPPUNIT_TEST(test_irma_update_cred_pin);
+	CPPUNIT_TEST(test_irma_read_credential_commands);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -55,6 +57,8 @@ public:
 	void test_irma_list_creds();
 	void test_irma_update_admin_pin();
 	void test_irma_del_cred_commands();
+	void test_irma_update_cred_pin();
+	void test_irma_read_credential_commands();
 
 	void setUp();
 	void tearDown();

@@ -109,11 +109,11 @@ public:
 	/**
 	 * Get the command sequence for updating the credential PIN of the IRMA
 	 * card, with PIN verification based on the specified PIN
-	 * @param old_pin the current credential PIN
+	 * @param admin_pin the current administration PIN
 	 * @param new_pin the new credential PIN
 	 * @return the command sequence for updating the credential pin of the IRMA card
 	 */
-	std::vector<bytestring> update_cred_pin_commands(std::string old_pin, std::string new_pin);
+	std::vector<bytestring> update_cred_pin_commands(std::string admin_pin, std::string new_pin);
 
 	/**
 	 * Get the command sequence for listing the credentials stored in the IRMA card
@@ -121,6 +121,15 @@ public:
 	 * @return the command sequence for listing the credentials stored in the IRMA card
 	 */
 	std::vector<bytestring> list_credentials_commands(std::string PIN);
+
+	/**
+	 * Read the attributes of a credentials stored in the IRMA card
+	 * @param attribute the selected attribute
+	 * @param credential the selected credential
+	 * @param PIN the administration PIN
+	 * @return the command sequence for listing the credentials stored in the IRMA card
+	 */
+	std::vector<bytestring> read_credential_commands(std::string credential, std::string PIN);
 	
 };
 
