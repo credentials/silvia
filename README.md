@@ -59,7 +59,7 @@ If you are root (administrative user), run:
 Together with the library, silvia provides different clients for issuing and verifying credentials,
 generating a Camenisch-Lysyanskaya (CL) keypair for a certain issuer and managing the IRMA card.
 
-####5.1 Generating a CL keypair for an issuer
+####5.1 Generating a CL keypair 
 
 For generating a keypair for issuing and verifying credentials, ```silvia_keygen``` is utililzed:
 ```
@@ -157,7 +157,7 @@ In this example, we use the credential description located at the test directory
 </CredentialIssueSpecification>
 ```
 This is consistent with the credential defined in https://github.com/credentials/irma_configuration/tree/master/MijnOverheid.
-Then, we need to execute the following command:
+Then, we need to execute the following commands:
 ```
 $ cd silvia/src/bin/issuer/
 $ ./silvia_issuer -I test/ageLower-test.xml -k ipk.xml -s isk.xml 
@@ -189,7 +189,7 @@ Usage:
         -v                 Print the version number
 ```
 
-First, we clone the irma_configuration repository:
+First, we clone the ```irma_configuration``` repository:
 
 ```
 $ git clone https://github.com/credentials/irma_configuration/
@@ -201,18 +201,18 @@ perform a verification that requires revealing all the attributes of the credent
 
 ```
 $ cd silvia/src/bin/verifier
-$ ./silvia_verifier -I irma_configuration/MijnOverheid/Issues/ageLower/description.xml -V      irma_configuration/MijnOverheid/Verifies/ageLowerAll/description.xml -k ipk.xml
+$ ./silvia_verifier -I irma_configuration/MijnOverheid/Issues/ageLower/description.xml -V irma_configuration/MijnOverheid/Verifies/ageLowerAll/description.xml -k ipk.xml
 ```
 
 where ```ipk.xml``` is the public key of the issuer that we generated in Step 5.1, ```irma_configuration/MijnOverheid/Issues/ageLower/description.xml``` contains
-the attributes of the credential we issued in Step 5.2 and ```irma_configuration/MijnOverheid/Verifies/ageLowerAll/description.xml``` is the
+the attributes of the credential we issued in Step 5.2, and ```irma_configuration/MijnOverheid/Verifies/ageLowerAll/description.xml``` is the
 policy that requires all the attributes from the credential revealed.
 
 ####5.4 Managing the IRMA card
 
 Using ```silvia_manager```, the cardholder can check the last operations performed
 by the card, reading the credentials stored in IRMA and their attributes, deleting credentials
-and updating the PINs:
+and changing her PINs:
 
 ```
 $ ./silvia_manager 
@@ -266,7 +266,7 @@ Timestamp: Wed May 21 11:01:43 2014
 
 The field ```Policy``` refers to the number of attributes that were revealed
 during the verification operation. The attributes that are revealed are encoded
-as '1'. Therefore, for 6 attributes where all revealed with the exception of the master
+as '1'. Therefore, for 6 attributes, where all were revealed with the exception of the master
 secret (first attribute) we obtain: ```0x3e = 111110b```.
 
 Also, we can read the list of credentials:
