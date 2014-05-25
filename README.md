@@ -304,11 +304,12 @@ Waiting for card (PCSC) ...OK
 Please enter your new administration PIN: 
 
 Communicating with the card... OK
-Attribute [1]: 
+Expiration date: Tue Jan 19 04:14:07 2038
+
+Attribute [1]: yes
 Attribute [2]: yes
 Attribute [3]: yes
 Attribute [4]: yes
-Attribute [5]: yes
 OK
 ********************************************************************************
 ```
