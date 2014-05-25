@@ -83,6 +83,17 @@ const char ACTION_ISSUE = '1';
 const char ACTION_PROVE = '2';
 const char ACTION_REMOVE = '3';
 
+void print_timestamp(std::string msg, std::string timestamp)
+{
+	time_t tstamp_int;
+	std::stringstream tstamp_ss;
+
+	tstamp_ss << std::hex << timestamp.c_str();
+	tstamp_ss >> tstamp_int;
+	
+	printf("%s: %s\n", msg.c_str(), ctime(&tstamp_int));
+}
+
 /* 
    print_log_entry is based on IdemixLogEntry
    by Wouter Lueks, Radboud University Nijmegen, March 2013.
@@ -118,22 +129,20 @@ void print_log_entry(int n, std::string e)
 	std::string credential = e.substr(IDX_CREDENTIAL*2, 4);
 	std::string mask = e.substr(IDX_SELECTION*2, 4);
 
-	std::stringstream tstamp_ss, cred_ss;
+	std::stringstream cred_ss;
+
 	unsigned int cred_int;   
-	time_t tstamp_int;
 
-	tstamp_ss << std::hex << timestamp;
 	cred_ss << std::hex << credential;
-
-	tstamp_ss >> tstamp_int;
 	cred_ss >> cred_int;
 
 	if (array[IDX_ACTION*2 + 1] == ACTION_PROVE)
 		printf("Policy: %s\n", mask.c_str());	
 
-	if (array[IDX_ACTION*2 + 1] != ACTION_NONE)
+	if (array[IDX_ACTION*2 + 1] != ACTION_NONE) {
 		printf("Credential: %d\n", cred_int);
-		printf("Timestamp: %s\n", ctime(&tstamp_int));
+		print_timestamp("Timestamp", timestamp);
+	}
 }
             
 void signal_handler(int signal)
@@ -412,6 +421,7 @@ bool delete_credential(silvia_card_channel* card, std::string credential, std::s
 	return rv;
 }
 
+
 bool read_credential(silvia_card_channel* card, std::string cred, std::string userPIN)
 {
 	bool rv = true;
@@ -430,20 +440,25 @@ bool read_credential(silvia_card_channel* card, std::string cred, std::string us
 	} else {
 		for (int i = 3; i < 8; i++) {
 		
-			// remove 0x9000
+			// Remove 0x9000
 			std::string attr_hex = results[i].hex_str().substr(0, results[i].hex_str().size() - 4);;
 
-			// remove 0's
+			// Remove 0's
 			std::string::size_type pos =  attr_hex.find_first_not_of('0', 0);
+
 			if(pos > 0)
 				attr_hex.erase(0,pos); 
-		
-			std::string attr_ascii;
 
-			for (int j = 0; j < attr_hex.length(); j += 2)
-				attr_ascii.push_back(strtol(attr_hex.substr(j, 2).c_str(), NULL, 16));
+			if (i == 3) {
+				print_timestamp("Expiration date", attr_hex);
+			} else {
+				std::string attr_ascii;
+
+				for (int j = 0; j < attr_hex.length(); j += 2)
+					attr_ascii.push_back(strtol(attr_hex.substr(j, 2).c_str(), NULL, 16));
 		
-			printf("Attribute [%i]: %s\n", (i-2), attr_ascii.c_str());
+					printf("Attribute [%i]: %s\n", (i-3), attr_ascii.c_str());
+			}
 		}
 	}
 	
@@ -547,6 +562,7 @@ void do_manager(int channel_type, int opt, std::string credential)
 	printf("********************************************************************************\n");
 	delete card;
 }
+
 		
 int main(int argc, char* argv[])
 {
