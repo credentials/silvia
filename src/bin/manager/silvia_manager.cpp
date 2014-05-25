@@ -546,14 +546,16 @@ void do_manager(int channel_type, int opt, std::string credential)
 
 	} else if (opt == MANAGER_OPT_DEL_CRED) {
 		// Ask the user to enter their PIN
-		std::string pin = get_pin("Please enter your new administration PIN: ");
+		std::string pin = get_pin("Please enter your administration PIN: ");
+
 		delete_credential(card, credential, pin);
 
 		printf("OK\n");
 
 	} else if (opt == MANAGER_OPT_READ_CRED) {
 		// Ask the user to enter their PIN
-		std::string pin = get_pin("Please enter your new administration PIN: ");
+		std::string pin = get_pin("Please enter your administration PIN: ");
+
 		read_credential(card, credential, pin);
 
 		printf("OK\n");
