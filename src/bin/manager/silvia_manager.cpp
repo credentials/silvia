@@ -68,6 +68,8 @@ static bool debug_output = false;
 #define MANAGER_OPT_UPDATE_CRED 0x04
 #define MANAGER_OPT_READ_CRED 0x05
 
+#define IRMA_VERIFIER_METADATA_OFFSET				(32 - 6)
+
 /* Log entries */
 
 const int IDX_TIMESTAMP = 0;
@@ -83,7 +85,7 @@ const char ACTION_ISSUE = '1';
 const char ACTION_PROVE = '2';
 const char ACTION_REMOVE = '3';
 
-void print_timestamp(std::string msg, std::string timestamp)
+void print_timestamp_log(std::string msg, std::string timestamp)
 {
 	time_t tstamp_int;
 	std::stringstream tstamp_ss;
@@ -92,6 +94,37 @@ void print_timestamp(std::string msg, std::string timestamp)
 	tstamp_ss >> tstamp_int;
 	
 	printf("%s: %s\n", msg.c_str(), ctime(&tstamp_int));
+}
+
+void print_timestamp_irma(std::string msg, bytestring timestamp)
+{
+	time_t expires;
+									
+	if (timestamp[IRMA_VERIFIER_METADATA_OFFSET] != 0x00)
+	{
+		// Check metadata version number
+		if (timestamp[IRMA_VERIFIER_METADATA_OFFSET] != 0x01)
+		{
+			printf("Invalid metadata attribute found!\n");
+		}
+		else
+		{
+			// Reconstruct expiry data from metadata
+			expires = 0;
+			expires += timestamp[IRMA_VERIFIER_METADATA_OFFSET + 1] << 16;
+			expires += timestamp[IRMA_VERIFIER_METADATA_OFFSET + 2] << 8;
+			expires += timestamp[IRMA_VERIFIER_METADATA_OFFSET + 3];
+			expires *= 86400; // convert days to seconds
+		}
+	}
+	else
+	{
+		// This is old style
+		expires = (timestamp[timestamp.size() - 2] << 8) + (timestamp[timestamp.size() - 1]);
+		expires *= 86400; // convert days to seconds
+	}
+
+	printf("%s: %s\n", msg.c_str(), ctime(&expires));
 }
 
 /* 
@@ -141,7 +174,7 @@ void print_log_entry(int n, std::string e)
 
 	if (array[IDX_ACTION*2 + 1] != ACTION_NONE) {
 		printf("Credential: %d\n", cred_int);
-		print_timestamp("Timestamp", timestamp);
+		print_timestamp_log("Timestamp", timestamp);
 	}
 }
             
@@ -447,10 +480,10 @@ bool read_credential(silvia_card_channel* card, std::string cred, std::string us
 			std::string::size_type pos =  attr_hex.find_first_not_of('0', 0);
 
 			if(pos > 0)
-				attr_hex.erase(0,pos); 
+				attr_hex.erase(0, pos); 
 
 			if (i == 3) {
-				print_timestamp("Expiration date", attr_hex);
+				print_timestamp_irma("Expiration date", results[i]);
 			} else {
 				std::string attr_ascii;
 
