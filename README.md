@@ -304,7 +304,7 @@ Waiting for card (PCSC) ...OK
 Please enter your new administration PIN: 
 
 Communicating with the card... OK
-Expiration date: Expiration date: Fri Nov 21 01:00:00 2014
+Expiration date: Fri Nov 21 01:00:00 2014
 
 Attribute [1]: yes
 Attribute [2]: yes
