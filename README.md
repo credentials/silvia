@@ -1,8 +1,8 @@
 
 ##The Simple Library for Verifying and Issuing Attributes (Silvia)
 
-Copyright (c) 2013-2014 Roland van Rijswijk-Deij
-Copyright (c) 2014      Antonio de la Piedra
+Copyright (c) 2013-2014	Roland van Rijswijk-Deij  
+Copyright (c) 2014	Antonio de la Piedra
 
 All rights reserved. This software is distributed under a BSD-style
 license. For more information, see LICENSE
@@ -319,5 +319,5 @@ OK
 
 Questions/remarks/suggestions/praise on this tool can be sent to:
 
-Roland van Rijswijk-Deij 	<roland.vanrijswijk@surfnet.nl>
+Roland van Rijswijk-Deij 	<roland.vanrijswijk@surfnet.nl>  
 Antonio de la Piedra 		<A.delaPiedra@cs.ru.nl>
