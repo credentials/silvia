@@ -41,6 +41,7 @@
 #ifdef WITH_NFC
 #include "silvia_nfc_card.h"
 #endif // WITH_NFC
+#include "silvia_stdio_card.h"
 #include "silvia_card_channel.h"
 #include "silvia_irma_xmlreader.h"
 #include "silvia_idemix_xmlreader.h"
@@ -58,10 +59,20 @@ const char* month[12] = { "January", "February", "March", "April", "May", "June"
 
 #define IRMA_VERIFIER_METADATA_OFFSET				(32 - 6)
 
+bool parseable_output = false;
+
 void signal_handler(int signal)
 {
 	// Exit on any signal we receive and handle
-	fprintf(stderr, "\nCaught signal, exiting...\n");
+    if(parseable_output)
+    {
+        printf("error signal\n"); fflush(stdout);
+        exit(-1);
+    }
+    else
+    {
+        fprintf(stderr, "\nCaught signal, exiting...\n");
+    }
 	
 	exit(0);
 }
@@ -85,14 +96,21 @@ void set_parameters()
 
 void version(void)
 {
-	printf("The Simple Library for Verifying and Issuing Attributes (silvia)\n");
-	printf("\n");
-	printf("Command-line verification utility for IRMA cards %s\n", VERSION);
-	printf("\n");
-	printf("Copyright (c) 2013 Roland van Rijswijk-Deij\n\n");
-	printf("Use, modification and redistribution of this software is subject to the terms\n");
-	printf("of the license agreement. This software is licensed under a 2-clause BSD-style\n");
-	printf("license a copy of which is included as the file LICENSE in the distribution.\n");
+    if(parseable_output)
+    {
+        printf("info version %s\n", VERSION); fflush(stdout);
+    }
+    else
+    {
+        printf("The Simple Library for Verifying and Issuing Attributes (silvia)\n");
+        printf("\n");
+        printf("Command-line verification utility for IRMA cards %s\n", VERSION);
+        printf("\n");
+        printf("Copyright (c) 2013 Roland van Rijswijk-Deij\n\n");
+        printf("Use, modification and redistribution of this software is subject to the terms\n");
+        printf("of the license agreement. This software is licensed under a 2-clause BSD-style\n");
+        printf("license a copy of which is included as the file LICENSE in the distribution.\n");
+    }
 }
 
 void usage(void)
@@ -115,6 +133,7 @@ void usage(void)
 	printf("\t-P                 Use PC/SC for card communication (default)\n");
 	printf("\t-N                 Use NFC for card communication\n");
 #endif // WITH_PCSC && WITH_NFC
+    printf("\t-S                 Use StdIO for card communication (changes output to parseable format)\n");
 	printf("\n");
 	printf("\t-h                 Print this help message\n");
 	printf("\n");
@@ -123,32 +142,68 @@ void usage(void)
 
 bool verify_pin(silvia_card_channel* card)
 {
-	printf("\n");
-	printf("=================================================\n");
-	printf("            PIN VERIFICATION REQUIRED            \n");
-	printf("=================================================\n");
-	printf("\n");
+    if(parseable_output)
+    {
+        printf("control send-pin\n"); fflush(stdout);
+    }
+    else
+    {
+        printf("\n");
+        printf("=================================================\n");
+        printf("            PIN VERIFICATION REQUIRED            \n");
+        printf("=================================================\n");
+        printf("\n");
+    }
 	
 	
 	std::string PIN;
 	
 	do
 	{ 
-		PIN = getpass("Please enter your PIN: ");
+        if(parseable_output)
+        {
+            char response_type[50];
+            std::cin >> response_type >> PIN;
+            if(strcmp(response_type, "PIN") != 0)
+            {
+                // TODO: Wrong state?
+            }
+        }
+        else
+        {
+            PIN = getpass("Please enter your PIN: ");
+        }
 		
 		if (PIN.size() > 8)
 		{
-			printf("PIN too long; 8 characters or less expected!\n");
+            if(parseable_output)
+            {
+                printf("warning pin-too-long\n"); fflush(stdout);
+            }
+            else
+            {
+                printf("PIN too long; 8 characters or less expected!\n");
+            }
 		}
 		else if (PIN.empty())
 		{
-			printf("You must enter a PIN!\n");
+            if(parseable_output)
+            {
+                printf("warning no-pin\n"); fflush(stdout);
+            }
+            else
+            {
+                printf("You must enter a PIN!\n");
+            }
 		}
 	}
 	while (PIN.empty() || (PIN.size() > 8));
 	
-	printf("\n");
-	printf("Verifying PIN... "); fflush(stdout);
+    if(!parseable_output)
+    {
+        printf("\n");
+        printf("Verifying PIN... "); fflush(stdout);
+    }
 	
 	bytestring verify_pin_apdu = "0020000008";
 	
@@ -167,28 +222,58 @@ bool verify_pin(silvia_card_channel* card)
 	
 	if (!card->transmit(verify_pin_apdu, data, sw))
 	{
-		printf("FAILED (card communication)\n");
+        if(!parseable_output)
+        {
+            printf("FAILED (card communication)\n");
+        }
 		
 		return false;
 	}
 	
 	if (sw == 0x9000)
 	{
-		printf("OK\n");
+        if(!parseable_output)
+        {
+            printf("OK\n");
+        }
 		
 		return true;
 	}
 	else if (sw == 0x63C0)
 	{
-		printf("FAILED, the card has been blocked (entered wrong PIN too many times)\n");
+        if(parseable_output)
+        {
+            printf("error card-blocked\n"); fflush(stdout);
+            exit(-1);
+        }
+        else
+        {
+            printf("FAILED, the card has been blocked (entered wrong PIN too many times)\n");
+        }
 	}
 	else if ((sw > 0x63C0) && (sw <= 0x63CF))
 	{
-		printf("FAILED (%u attempts remaining)\n", sw - 0x63C0);
+        if(parseable_output)
+        {
+            printf("error incorrect-pin %u\n", sw - 0x63C0); fflush(stdout);
+            exit(-1);
+        }
+        else
+        {
+            printf("FAILED (%u attempts remaining)\n", sw - 0x63C0);
+        }
 	}
 	else
 	{
-		printf("FAILED (card error 0x%04X)\n", sw);
+        if(parseable_output)
+        {
+            printf("error card-error 0x%04X\n", sw); fflush(stdout);
+            exit(-1);
+        }
+        else
+        {
+            printf("FAILED (card error 0x%04X)\n", sw);
+        }
 	}
 	
 	return false;
@@ -212,7 +297,10 @@ bytestring bs2str(const bytestring& in)
 
 bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& commands, std::vector<bytestring>& results, bool force_pin)
 {
-	printf("Communicating with the card... "); fflush(stdout);
+    if(!parseable_output)
+    {
+        printf("Communicating with the card... "); fflush(stdout);
+    }
 		
 	bool comm_ok = true;
 	size_t cmd_ctr = 0;
@@ -237,7 +325,10 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 				break;
 			}
 			
-			printf("Communicating with the card... "); fflush(stdout);
+            if(!parseable_output)
+            {
+                printf("Communicating with the card... "); fflush(stdout);
+            }
 		}
 		else if (result.substr(result.size() - 2) == "6982")
 		{
@@ -248,7 +339,10 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 				break;
 			}
 			
-			printf("Communicating with the card... "); fflush(stdout);
+            if(!parseable_output)
+            {
+                printf("Communicating with the card... "); fflush(stdout);
+            }
 			
 			// Re-execute the command
 			if (!card->transmit(*i, result))
@@ -261,7 +355,15 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 		         (result.substr(result.size() - 2) != "6A82") &&
 		         (result.substr(result.size() - 2) != "6D00"))
 		{
-			printf("(0x%s) ", result.substr(result.size() - 2).hex_str().c_str());
+            if(parseable_output)
+            {
+                printf("error card-error 0x%s", result.substr(result.size() - 2).hex_str().c_str()); fflush(stdout);
+                exit(-1);
+            }
+            else
+            {
+                printf("(0x%s) ", result.substr(result.size() - 2).hex_str().c_str());
+            }
 			comm_ok = false;
 			break;
 		}
@@ -269,14 +371,17 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 		results.push_back(result);
 	}
 	
-	if (comm_ok)
-	{
-		printf("OK\n");
-	}
-	else
-	{
-		printf("FAILED!\n");
-	}
+    if(!parseable_output)
+    {
+        if (comm_ok)
+        {
+            printf("OK\n");
+        }
+        else
+        {
+            printf("FAILED!\n");
+        }
+    }
 	
 	return comm_ok;
 }
@@ -285,14 +390,25 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 {
 	silvia_card_channel* card = NULL;
 	
-	printf("Silvia command-line IRMA verifier %s\n\n", VERSION);
+    if(!parseable_output)
+    {
+        printf("Silvia command-line IRMA verifier %s\n\n", VERSION);
+    }
 		
 	// Read configuration files
 	silvia_verifier_specification* vspec = silvia_irma_xmlreader::i()->read_verifier_spec(issuer_spec, verifier_spec);
 	
 	if (vspec == NULL)
 	{
-		fprintf(stderr, "Failed to read issuer and verifier specification\n");
+        if(parseable_output)
+        {
+            printf("error spec-error\n"); fflush(stdout);
+            exit(-2);
+        }
+        else
+        {
+            fprintf(stderr, "Failed to read issuer and verifier specification\n");
+        }
 		
 		return;
 	}
@@ -301,7 +417,15 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 	
 	if (pubkey == NULL)
 	{
-		fprintf(stderr, "Failed to read issuer public key\n");
+        if(parseable_output)
+        {
+            printf("error key-error\n"); fflush(stdout);
+            exit(-2);
+        }
+        else
+        {
+            fprintf(stderr, "Failed to read issuer public key\n");
+        }
 		
 		delete vspec;
 		
@@ -313,10 +437,13 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 	
 	while (true)
 	{
-		printf("\n********************************************************************************\n");
-		printf("%s: %s\n\n", vspec->get_verifier_name().c_str(), vspec->get_short_msg().c_str());
-		
-		printf("Waiting for card");
+        if(!parseable_output)
+        {
+            printf("\n********************************************************************************\n");
+            printf("%s: %s\n\n", vspec->get_verifier_name().c_str(), vspec->get_short_msg().c_str());
+            
+            printf("Waiting for card");
+        }
 		
 #ifdef WITH_PCSC
 		if (channel_type == SILVIA_CHANNEL_PCSC)
@@ -352,8 +479,18 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 			card = nfc_card;
 		}
 #endif // WITH_NFC
+        if (channel_type == SILVIA_CHANNEL_STDIO)
+        {
+            silvia_stdio_card* stdio_card = NULL;
+            stdio_card = new silvia_stdio_card();
+
+            card = stdio_card;
+        }
 			
-		printf("OK\n");
+        if(!parseable_output)
+        {
+            printf("OK\n");
+        }
 		
 		// First, perform application selection
 		std::vector<bytestring> commands;
@@ -373,22 +510,35 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 				
 				if (communicate_with_card(card, commands, results, force_pin))
 				{
-					printf("Verifying proof... "); fflush(stdout);
+                    if(!parseable_output)
+                    {
+                        printf("Verifying proof... "); fflush(stdout);
+                    }
 				
 					std::vector<std::pair<std::string, bytestring> > revealed;
 					
 					if (verifier.submit_and_verify(results, revealed))
 					{
-						printf("OK\n");
-						
-						printf("\n");
+                        if(!parseable_output)
+                        {
+                            printf("OK\n");
+                            
+                            printf("\n");
+                        }
 						
 						if (revealed.size() > 0)
 						{
-							printf("Revealed attributes:\n\n");
-							
-							printf("Attribute           |Value\n");
-							printf("--------------------+-----------------------------------------------------------\n");
+                            if(parseable_output)
+                            {
+                                printf("result OK\n"); fflush(stdout);
+                            }
+                            else
+                            {
+                                printf("Revealed attributes:\n\n");
+                                
+                                printf("Attribute           |Value\n");
+                                printf("--------------------+-----------------------------------------------------------\n");
+                            }
 							
 							std::vector<std::pair<std::string, bytestring> >::iterator i = revealed.begin();
 							
@@ -403,7 +553,14 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 									// Check metadata version number
 									if (i->second[IRMA_VERIFIER_METADATA_OFFSET] != 0x01)
 									{
-										printf("Invalid metadata attribute found!\n");
+                                        if(parseable_output)
+                                        {
+                                            printf("result expiry unknown\n"); fflush(stdout);
+                                        }
+                                        else
+                                        {
+                                            printf("Invalid metadata attribute found!\n");
+                                        }
 									}
 									else
 									{
@@ -414,21 +571,35 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 										expires += i->second[IRMA_VERIFIER_METADATA_OFFSET + 3];
 										
 										expires *= 86400; // convert days to seconds
-										struct tm* date = gmtime(&expires);
-										
-										// Reconstruct credential ID as issued from metadata
-										unsigned short issued_id = 0;
-										
-										issued_id += i->second[IRMA_VERIFIER_METADATA_OFFSET + 4] << 8;
-										issued_id += i->second[IRMA_VERIFIER_METADATA_OFFSET + 5];
-										
-										printf("%-20s|%d (%s)\n", "credential ID", issued_id, (issued_id == vspec->get_credential_id()) ? "matches" : "DOES NOT MATCH");
-										
-										printf("%-20s|%s %s %d %d\n", i->first.c_str(),
-											weekday[date->tm_wday],
-											month[date->tm_mon],
-											date->tm_mday,
-											date->tm_year + 1900);
+
+                                        // Reconstruct credential ID as issued from metadata
+                                        unsigned short issued_id = 0;
+                                        
+                                        issued_id += i->second[IRMA_VERIFIER_METADATA_OFFSET + 4] << 8;
+                                        issued_id += i->second[IRMA_VERIFIER_METADATA_OFFSET + 5];
+
+                                        if(parseable_output)
+                                        {
+                                            if(!issued_id == vspec->get_credential_id())
+                                            {
+                                                printf("carderror credential-mismatch\n"); fflush(stdout);
+                                            }
+
+                                            std::cout << "result expiry " << expires << std::endl;
+                                        }
+                                        else
+                                        {
+                                            struct tm* date = gmtime(&expires);
+                                            
+                                            
+                                            printf("%-20s|%d (%s)\n", "credential ID", issued_id, (issued_id == vspec->get_credential_id()) ? "matches" : "DOES NOT MATCH");
+                                            
+                                            printf("%-20s|%s %s %d %d\n", i->first.c_str(),
+                                                weekday[date->tm_wday],
+                                                month[date->tm_mon],
+                                                date->tm_mday,
+                                                date->tm_year + 1900);
+                                        }
 									}
 								}
 								else
@@ -436,14 +607,21 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 									// This is old style
 									expires = (i->second[i->second.size() - 2] << 8) + (i->second[i->second.size() - 1]);
 									expires *= 86400; // convert days to seconds
-								
-									struct tm* date = gmtime(&expires);
-									
-									printf("%-20s|%s %s %d %d\n", i->first.c_str(),
-										weekday[date->tm_wday],
-										month[date->tm_mon],
-										date->tm_mday,
-										date->tm_year + 1900);
+
+                                    if(parseable_output)
+                                    {
+                                        std::cout << "result expiry " << expires << std::endl;
+                                    }
+                                    else
+                                    {
+                                        struct tm* date = gmtime(&expires);
+                                        
+                                        printf("%-20s|%s %s %d %d\n", i->first.c_str(),
+                                            weekday[date->tm_wday],
+                                            month[date->tm_mon],
+                                            date->tm_mday,
+                                            date->tm_year + 1900);
+                                    }
 								}
 								
 								i++;
@@ -452,15 +630,33 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 							// Assume the other attributes are strings
 							for (; i != revealed.end(); i++)
 							{
-								printf("%-20s|%-59s\n", i->first.c_str(), (const char*) bs2str(i->second).byte_str());
+                                if(parseable_output)
+                                {
+                                    printf("attribute %s %s\n", i->first.c_str(), (const char*) bs2str(i->second).byte_str()); fflush(stdout);
+                                }
+                                else
+                                {
+                                    printf("%-20s|%-59s\n", i->first.c_str(), (const char*) bs2str(i->second).byte_str());
+                                }
 							}
-							
-							printf("\n");
+
+							if(!parseable_output)
+                            {
+                                printf("\n");
+                            }
 						}
 					}
 					else
 					{
-						printf("FAILED\n");
+                        if(parseable_output)
+                        {
+                            printf("carderror invalid-sig\n"); fflush(stdout);
+                            exit(-1);
+                        }
+                        else
+                        {
+                            printf("FAILED\n");
+                        }
 					}
 				}
 				else
@@ -470,7 +666,15 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 			}
 			else
 			{
-				printf("Failed to select IRMA application!\n");
+                if(parseable_output)
+                {
+                    printf("carderror no-application\n"); fflush(stdout);
+                    exit(-1);
+                }
+                else
+                {
+                    printf("Failed to select IRMA application!\n");
+                }
 				
 				verifier.abort();
 			}
@@ -480,18 +684,25 @@ void verifier_loop(std::string issuer_spec, std::string verifier_spec, std::stri
 			verifier.abort();
 		}
 		
-		printf("Waiting for card to be removed... "); fflush(stdout);
-		
-		while (card->status())
-		{
-			usleep(10000);
-		}
-		
-		printf("OK\n");
-		
-		printf("********************************************************************************\n");
+        if(!parseable_output)
+        {
+            printf("Waiting for card to be removed... "); fflush(stdout);
+            while (card->status())
+            {
+                usleep(10000);
+            }
+            printf("OK\n");
+            
+            printf("********************************************************************************\n");
+        }
 		
 		delete card;
+
+        if(parseable_output)
+        {
+            // Exit
+            break;
+        }
 	}
 	
 	delete vspec;
@@ -515,12 +726,14 @@ int main(int argc, char* argv[])
 	int channel_type = SILVIA_CHANNEL_PCSC;
 #elif defined(WITH_NFC)
 	int channel_type = SILVIA_CHANNEL_NFC;
+#else
+    int channel_type = SILVIA_CHANNEL_STDIO;
 #endif
 	
 #if defined(WITH_PCSC) && defined(WITH_NFC)
-	while ((c = getopt(argc, argv, "I:V:k:phvPN")) != -1)
+	while ((c = getopt(argc, argv, "I:V:k:phvSPN")) != -1)
 #else
-	while ((c = getopt(argc, argv, "I:V:k:phv")) != -1)
+	while ((c = getopt(argc, argv, "I:V:k:phvS")) != -1)
 #endif
 	{
 		switch (c)
@@ -542,7 +755,11 @@ int main(int argc, char* argv[])
 			break;
 		case 'p':
 			force_pin = true;
-			break;
+            break;
+        case 'S':
+            channel_type = SILVIA_CHANNEL_STDIO;
+            parseable_output = true;
+            break;
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 		case 'P':
 			channel_type = SILVIA_CHANNEL_PCSC;
@@ -556,21 +773,45 @@ int main(int argc, char* argv[])
 	
 	if (issuer_spec.empty())
 	{
-		fprintf(stderr, "No issuer specification file specified!\n");
+        if(parseable_output)
+        {
+            printf("error no-spec\n"); fflush(stdout);
+            exit(-3);
+        }
+        else
+        {
+            fprintf(stderr, "No issuer specification file specified!\n");
+        }
 		
 		return -1;
 	}
 	
 	if (verifier_spec.empty())
 	{
-		fprintf(stderr, "No verifier specification file specified!\n");
+        if(parseable_output)
+        {
+            printf("error no-verifier\n"); fflush(stdout);
+            exit(-3);
+        }
+        else
+        {
+            fprintf(stderr, "No verifier specification file specified!\n");
+        }
 		
 		return -1;
 	}
 	
 	if (issuer_pubkey.empty())
 	{
-		fprintf(stderr, "No issuer public key file specified!\n");
+        if(parseable_output)
+        {
+            printf("error no-pubkey\n"); fflush(stdout);
+            exit(-3);
+        }
+        else
+        {
+            fprintf(stderr, "No issuer public key file specified!\n");
+        }
 		
 		return -1;
 	}

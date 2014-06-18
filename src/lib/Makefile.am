@@ -6,7 +6,8 @@ AM_CPPFLAGS = 			-I$(srcdir)/issuer \
 				-I$(srcdir)/prover \
 				-I$(srcdir)/verifier \
 				-I$(srcdir)/manager \
-				-I$(srcdir)/common
+				-I$(srcdir)/common \
+				-I$(srcdir)/stdio
 
 lib_LTLIBRARIES =		libsilvia.la
 
@@ -15,7 +16,8 @@ libsilvia_la_LIBADD =		issuer/libsilvia_issuer.la \
 				prover/libsilvia_prover.la \
 				manager/libsilvia_manager.la \
 				verifier/libsilvia_verifier.la \
-				common/libsilvia_common.la 
+				common/libsilvia_common.la  \
+				stdio/libsilvia_stdio.la
 
 libsilvia_la_LDFLAGS =		-version-info @VERSION_INFO@ \
 				@OPENSSL_LIBS@
@@ -33,7 +35,8 @@ SUBDIRS = 			issuer \
 				prover \
 				verifier \
 				manager \
-				common
+				common \
+				stdio
 
 # Process optional components
 if BUILD_PCSC

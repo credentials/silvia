@@ -1,0 +1,26 @@
+out:
+request <value>
+control send-pin
+error signal
+warning pin-too-long
+warning no-pin
+error card-blocked
+error incorrect-pin <remaining>
+error card-error 0x<error>
+error spec-error
+error no-spec
+error no-verifier
+error no-pubkey
+error key-error
+carderror credential-mismatch
+carderror invalid-sig
+carderror no-application
+info version <version>
+result OK
+result expiry unknown
+result expiry X
+attribute <key> <value>
+
+in:
+response <value>
+PIN <pin>

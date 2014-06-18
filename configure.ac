@@ -225,6 +225,7 @@ AC_CONFIG_FILES([
 	src/bin/loader/Makefile
 	src/bin/issuer/Makefile
 	src/bin/manager/Makefile
+    src/bin/proxy/Makefile
 	src/lib/Makefile
 	src/lib/test/Makefile
 	src/lib/common/Makefile
@@ -233,6 +234,7 @@ AC_CONFIG_FILES([
 	src/lib/issuer/test/Makefile
 	src/lib/prover/Makefile
 	src/lib/prover/test/Makefile
+    src/lib/stdio/Makefile
 	src/lib/verifier/Makefile
 	src/lib/verifier/test/Makefile
 	src/lib/manager/Makefile
