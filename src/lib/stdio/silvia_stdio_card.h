@@ -1,7 +1,7 @@
 /* $Id$ */
 
 /*
- * Copyright (c) 2013 Roland van Rijswijk-Deij
+ * Copyright (c) 2014 Patrick Uiterwijk
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -27,40 +27,51 @@
  */
 
 /*****************************************************************************
- silvia_card_channel.h
+ silvia_stdio_card.h
 
- Abstract base class for card channels
+ POSIX StdIO communication classes
  *****************************************************************************/
-
-#ifndef _SILVIA_CARD_CHANNEL_H
-#define _SILVIA_CARD_CHANNEL_H
-
-#include <string>
+ 
 #include "silvia_bytestring.h"
-
+#include "silvia_card_channel.h"
+#include <iostream>
+#include <memory>
+#include <string>
+ 
+#ifndef _SILVIA_STDIO_CARD_H
+#define _SILVIA_STDIO_CARD_H
+ 
 /**
- * Card channel interface
+ * Card class
  */
- 
-#define SILVIA_CHANNEL_PCSC				0x01	// Local PC/SC reader through libpcsclite
-#define SILVIA_CHANNEL_NFC				0x02	// Local NFC reader through libnfc
-#define SILVIA_CHANNEL_PROXY			0x03	// Card proxy
-#define SILVIA_CHANNEL_STDIO            0x04    // StdIO communication
- 
-class silvia_card_channel
+  
+class silvia_stdio_card : public silvia_card_channel
 {
 public:
+	/**
+	 * Constructor
+     * @param to_card the descriptor for communication to the card
+     * @param from_card the descriptor for communication from the card
+	 */
+	silvia_stdio_card();
+	
+	/**
+	 * Destructor
+	 * Will give the command to disconnect from the card
+	 */
+	~silvia_stdio_card();
+	
 	/**
 	 * Get the channel type
 	 * @return the channel type
 	 */
-	virtual int get_type() = 0;
+	virtual int get_type();
 	
 	/**
 	 * Get the connection status
-	 * @return true if the connection is up
+	 * @return the connection status (true = connected)
 	 */
-	virtual bool status() = 0;
+	virtual bool status();
 	
 	/**
 	 * Transmit an APDU and receive return data
@@ -69,7 +80,7 @@ public:
 	 * @param sw The return status word
 	 * @return true if the APDU exchange completed successfully
 	 */
-	virtual bool transmit(bytestring APDU, bytestring& data, unsigned short& sw) = 0;
+	virtual bool transmit(bytestring APDU, bytestring& data, unsigned short& sw);
 	
 	/**
 	 * Transmit an APDU and receive return data
@@ -77,16 +88,13 @@ public:
 	 * @param data_sw The return data including the status word
 	 * @return true if the APDU exchange completed successfully
 	 */
-	virtual bool transmit(bytestring APDU, bytestring& data_sw) = 0;
+	virtual bool transmit(bytestring APDU, bytestring& data_sw);
+
+    virtual std::string get_reader_name();
 	
-	/**
-	 * Get the card reader name in which the card resides
-	 * @return the card reader name of the reader containing the card
-	 */
-	virtual std::string get_reader_name() = 0;
-
 private:
+	// The card connection status
+	bool connected;
 };
-
-#endif // !_SILVIA_CARD_CHANNEL_H
-
+ 
+#endif // !_SILVIA_STDIO_CARD_H

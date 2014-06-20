@@ -1,0 +1,11 @@
+out:
+control wait-for-card
+control wait-for-remove
+control connected
+error no-card
+error transmit-error
+error non-request
+response <value>
+
+in:
+<request value>
