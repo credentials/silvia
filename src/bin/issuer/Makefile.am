@@ -7,6 +7,7 @@ AM_CPPFLAGS = 			-I$(srcdir)/../../lib/common \
 				-I$(srcdir)/../../lib/xml \
 				-I$(srcdir)/../../lib/issuer \
 				-I$(srcdir)/../../lib \
+				-I$(srcdir)/../../lib/stdio \
 				@PCSC_CFLAGS@ \
 				@XML_CFLAGS@
 

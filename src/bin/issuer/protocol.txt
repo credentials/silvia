@@ -1,0 +1,24 @@
+out:
+request <value>
+control send-pin
+error signal
+warning pin-too-long
+warning no-pin
+error card-blocked
+error incorrect-pin <remaining>
+error card-error 0x<error>
+error issue-spec-error
+error key-error
+error private-key-error
+error no-issue-spec
+error no-pubkey
+error no-privkey
+error invalid-parameters
+carderror no-application
+error round-failed <roundnr>
+error communicate-error
+result OK
+
+in:
+response <value>
+PIN <pin>
