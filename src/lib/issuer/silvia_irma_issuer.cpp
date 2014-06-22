@@ -73,10 +73,9 @@ silvia_irma_issuer::~silvia_irma_issuer()
 	delete issuer;
 }
 
-std::vector<bytestring> silvia_irma_issuer::get_select_commands(std::string PIN)
+std::vector<bytestring> silvia_irma_issuer::get_select_commands()
 {
 	assert(irma_issuer_state == IRMA_ISSUER_START);
-	assert(PIN.size() <= 8);
 	
 	std::vector<bytestring> commands;
 	
@@ -85,21 +84,6 @@ std::vector<bytestring> silvia_irma_issuer::get_select_commands(std::string PIN)
 	////////////////////////////////////////////////////////////////////
 	
 	commands.push_back("00A4040009F849524D416361726400");	// version >= 0.8
-	
-	////////////////////////////////////////////////////////////////////
-	// Step 2: verify PIN
-	////////////////////////////////////////////////////////////////////
-	
-	silvia_apdu verify_pin(0x00, 0x20, 0x00, 0x00);
-	
-	bytestring pin_data;
-	pin_data.wipe(8);
-	
-	memcpy(&pin_data[0], PIN.c_str(), PIN.size());
-	
-	verify_pin.append_data(pin_data);
-	
-	commands.push_back(verify_pin.get_apdu());
 	
 	irma_issuer_state = IRMA_ISSUER_WAIT_SELECT;
 	
@@ -111,7 +95,7 @@ bool silvia_irma_issuer::submit_select_data(std::vector<bytestring>& results)
 	assert(irma_issuer_state == IRMA_ISSUER_WAIT_SELECT);
 	
 	// Check that the number of responses matches what we expect
-	if (results.size() != 2)
+	if (results.size() != 1)
 	{
 		this->abort();
 		

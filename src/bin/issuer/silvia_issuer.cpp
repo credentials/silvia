@@ -153,7 +153,9 @@ void usage(void)
 	printf("\t-v                  Print the version number\n");
 }
 
-std::string get_pin()
+std::string PIN;
+
+bool verify_pin(silvia_card_channel* card)
 {
     if(parseable_output)
     {
@@ -167,11 +169,10 @@ std::string get_pin()
         printf("=================================================\n");
         printf("\n");
     }
-	
-	std::string PIN;
-	
-	do
-	{ 
+
+
+    while(PIN.empty() || (PIN.size() > 8))
+    {
         if(parseable_output)
         {
             char response_type[50];
@@ -183,7 +184,7 @@ std::string get_pin()
         }
         else
         {
-            PIN = getpass("Please enter your credential PIN: ");
+            PIN = getpass("Please enter your PIN: ");
         }
         
         if (PIN.size() > 8)
@@ -208,30 +209,101 @@ std::string get_pin()
                 printf("You must enter a PIN!\n");
             }
         }
-	}
-	while (PIN.empty() || (PIN.size() > 8));
-	
+    };
+
     if(!parseable_output)
     {
         printf("\n");
+        printf("Verifying PIN... "); fflush(stdout);
     }
-	
-	return PIN;
+
+    bytestring verify_pin_apdu = "0020000008";
+
+    for (std::string::iterator i = PIN.begin(); i != PIN.end(); i++)
+    {
+        verify_pin_apdu += (unsigned char) *i;
+    }
+
+    while (verify_pin_apdu.size() < 13)
+    {
+        verify_pin_apdu += "00";
+    }
+
+    bytestring data;
+    unsigned short sw;
+
+    if (!card->transmit(verify_pin_apdu, data, sw))
+    {
+        if(!parseable_output)
+        {
+            printf("FAILED (card communication)\n");
+        }
+
+        return false;
+    }
+
+    if (sw == 0x9000)
+    {
+        if(!parseable_output)
+        {
+            printf("OK\n");
+        }
+
+        return true;
+    }
+    else if (sw == 0x63C0)
+    {
+        if(parseable_output)
+        {
+            printf("error card-blocked\n"); fflush(stdout);
+            exit(-1);
+        }
+        else
+        {
+            printf("FAILED, the card has been blocked (entered wrong PIN too many times)\n");
+        }
+    }
+    else if ((sw > 0x63C0) && (sw <= 0x63CF))
+    {
+        if(parseable_output)
+        {
+            printf("error incorrect-pin %u\n", sw - 0x63C0); fflush(stdout);
+            exit(-1);
+        }
+        else
+        {
+            printf("FAILED (%u attempts remaining)\n", sw - 0x63C0);
+        }
+    }
+    else
+    {
+        if(parseable_output)
+        {
+            printf("error card-error 0x%04X\n", sw); fflush(stdout);
+            exit(-1);
+        }
+        else
+        {
+            printf("FAILED (card error 0x%04X)\n", sw);
+        }
+    }
+
+    return false;
 }
 
 bytestring bs2str(const bytestring& in)
 {
 	bytestring out = in;
-	
+
 	// Strip leading 00's
 	while ((out.size() > 0) && (out[0] == 0x00))
 	{
 		out = out.substr(1);
 	}
-	
+
 	// Append null-termination
 	out += 0x00;
-	
+
 	return out;
 }
 
@@ -309,7 +381,7 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 	return comm_ok;
 }
 
-bool issue_one_credential(silvia_card_channel* card, std::string issue_spec, std::string issuer_pubkey, std::string issuer_privkey, std::string userPIN)
+bool issue_one_credential(silvia_card_channel* card, std::string issue_spec, std::string issuer_pubkey, std::string issuer_privkey)
 {
 	bool rv = true;
 
@@ -396,107 +468,125 @@ bool issue_one_credential(silvia_card_channel* card, std::string issue_spec, std
 	std::vector<bytestring> commands;
 	std::vector<bytestring> results;
 	
-	commands = issuer.get_select_commands(userPIN);
+	commands = issuer.get_select_commands();
 	
 	if (communicate_with_card(card, commands, results))
 	{
 		if (issuer.submit_select_data(results))
 		{
-			// Perform the first round of issuance
-			commands.clear();
-			results.clear();
-			
-			commands = issuer.get_issue_commands_round_1();
-			
-			if (communicate_with_card(card, commands, results))
-			{
-				// Verify the return data of the first round
-				if (issuer.submit_issue_results_round_1(results))
-				{
-					commands.clear();
-					results.clear();
-					
-					commands = issuer.get_issue_commands_round_2();
-					
-					if (communicate_with_card(card, commands, results))
-					{
-						if (issuer.submit_issue_results_round_2(results))
-						{
-                            if(parseable_output)
-                            {
-                                printf("result OK\n"); fflush(stdout);
-                            }
-                            else
-                            {
-                                printf("Credential issued successfully\n");
-                            }
-						}
-						else
-						{
-                            if(parseable_output)
-                            {
-                                printf("error round-failed 2\n"); fflush(stdout);
-                            }
-                            else
-                            {
-                                printf("Round 2 of issuance FAILED!\n");
-                            }
-							
-							issuer.abort();
+            if (verify_pin(card))
+            {
+                // Perform the first round of issuance
+                commands.clear();
+                results.clear();
 
-							rv = false;
-						}
-					}
-					else
-					{
-                        if(parseable_output)
+                commands = issuer.get_issue_commands_round_1();
+
+                if (communicate_with_card(card, commands, results))
+                {
+                    // Verify the return data of the first round
+                    if (issuer.submit_issue_results_round_1(results))
+                    {
+                        commands.clear();
+                        results.clear();
+
+                        commands = issuer.get_issue_commands_round_2();
+
+                        if (communicate_with_card(card, commands, results))
                         {
-                            printf("error communicate-error\n"); fflush(stdout);
+                            if (issuer.submit_issue_results_round_2(results))
+                            {
+                                if(parseable_output)
+                                {
+                                    printf("result OK\n"); fflush(stdout);
+                                }
+                                else
+                                {
+                                    printf("Credential issued successfully\n");
+                                }
+                            }
+                            else
+                            {
+                                if(parseable_output)
+                                {
+                                    printf("error round-failed 2\n"); fflush(stdout);
+                                }
+                                else
+                                {
+                                    printf("Round 2 of issuance FAILED!\n");
+                                }
+
+                                issuer.abort();
+
+                                rv = false;
+                            }
                         }
                         else
                         {
-                            printf("Failed to communicate with the card, was it removed prematurely?\n");
-                        }
-				
-						issuer.abort();
+                            if(parseable_output)
+                            {
+                                printf("error communicate-error\n"); fflush(stdout);
+                            }
+                            else
+                            {
+                                printf("Failed to communicate with the card, was it removed prematurely?\n");
+                            }
 
-						rv = false;
-					}
-				}
-				else
-				{
-                    if(parseable_output)
-                    {
-                        printf("error round-failed 1\n"); fflush(stdout);
+                            issuer.abort();
+
+                            rv = false;
+                        }
                     }
                     else
                     {
-                        printf("Round 1 of issuance FAILED!\n");
-                    }
-					
-					issuer.abort();
+                        if(parseable_output)
+                        {
+                            printf("error round-failed 1\n"); fflush(stdout);
+                        }
+                        else
+                        {
+                            printf("Round 1 of issuance FAILED!\n");
+                        }
 
-					rv = false;
-				}
-			}
-			else
-			{
-                if(parseable_output)
-                {
-                    printf("error communicate-error\n"); fflush(stdout);
+                        issuer.abort();
+
+                        rv = false;
+                    }
                 }
                 else
                 {
-                    printf("Failed to communicate with the card, was it removed prematurely?\n");
+                    if(parseable_output)
+                    {
+                        printf("error communicate-error\n"); fflush(stdout);
+                    }
+                    else
+                    {
+                        printf("Failed to communicate with the card, was it removed prematurely?\n");
+                    }
+
+                    issuer.abort();
+
+                    rv = false;
                 }
-				
-				issuer.abort();
-				
-				rv = false;
-			}
-		}
-		else
-		{
+            }
+            else
+            {
+                if(parseable_output)
+                {
+                    printf("error pin-error\n"); fflush(stdout);
+                }
+                else
+                {
+                    printf("PIN Error\n");
+                }
+
+                issuer.abort();
+
+                rv = false;
+            }
+        }
+        else
+        {
             if(parseable_output)
             {
                 printf("carderror no-application\n"); fflush(stdout);
@@ -505,11 +595,10 @@ bool issue_one_credential(silvia_card_channel* card, std::string issue_spec, std
             {
                 printf("Failed to select IRMA application!\n");
             }
-			
-			issuer.abort();
+            issuer.abort();
 
-			rv = false;
-		}
+            rv = false;
+        }
 	}
 	else
 	{
@@ -594,11 +683,8 @@ void do_issue(int channel_type, std::string issue_spec, std::string issuer_pubke
         printf("OK\n");
     }
 	
-	// Ask the user to enter their PIN
-	std::string PIN = get_pin();
-
 	// Issue the credential
-	issue_one_credential(card, issue_spec, issuer_pubkey, issuer_privkey, PIN);
+	issue_one_credential(card, issue_spec, issuer_pubkey, issuer_privkey);
 
     if(!parseable_output)
     {
@@ -685,7 +771,8 @@ void execute_issue_script(int channel_type, std::string issue_script)
 	       (isks_it != script.get_issuer_isks().end()))
 	{
 		// Issue the credential
-		if (!issue_one_credential(card, *ispec_it, *ipks_it, *isks_it, script.get_user_PIN()))
+        PIN = script.get_user_PIN();
+		if (!issue_one_credential(card, *ispec_it, *ipks_it, *isks_it))
 		{
 			printf("Failed to issue credential, aborting\n");
 
