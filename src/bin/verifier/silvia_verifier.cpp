@@ -117,10 +117,13 @@ void usage(void)
 {
 	printf("Silvia command-line IRMA verifier %s\n\n", VERSION);
 	printf("Usage:\n");
-	printf("\tsilvia_verifier -I <issuer-spec> -V <verifier-spec> -k <issuer-pubkey> [-p]");
-#if defined(WITH_PCSC) && defined(WITH_NFC)
-	printf(" [-P] [-N]");
-#endif // WITH_PCSC && WITH_NFC
+	printf("\tsilvia_verifier -I <issuer-spec> -V <verifier-spec> -k <issuer-pubkey> [-p] [-S]");
+#if defined(WITH_PCSC)
+	printf(" [-P]");
+#endif // WITH_PCSC
+#if defined(WITH_NFC)
+    printf(" [-N]");
+#endif // WITH_NFC
 	printf("\n");
 	printf("\tsilvia_verifier -h\n");
 	printf("\tsilvia_verifier -v\n");
@@ -129,10 +132,12 @@ void usage(void)
 	printf("\t-V <verifier-spec> Read verifier specification from <verifier-spec>\n");
 	printf("\t-k <issuer-pubkey> Read issuer public key from <issuer-pubkey>\n");
 	printf("\t-p                 Force PIN verification\n");
-#if defined(WITH_PCSC) && defined(WITH_NFC)
+#if defined(WITH_PCSC)
 	printf("\t-P                 Use PC/SC for card communication (default)\n");
+#endif // WITH_PCSC
+#if defined(WITH_NFC)
 	printf("\t-N                 Use NFC for card communication\n");
-#endif // WITH_PCSC && WITH_NFC
+#endif // WITH_NFC
     printf("\t-S                 Use StdIO for card communication (changes output to parseable format)\n");
 	printf("\n");
 	printf("\t-h                 Print this help message\n");
