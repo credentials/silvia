@@ -168,9 +168,20 @@ bool verify_pin(silvia_card_channel* card)
         if(parseable_output)
         {
             char response_type[50];
-            std::cin >> response_type >> PIN;
-            if(strcmp(response_type, "PIN") != 0)
+            std::string response;
+            std::cin >> response_type >> response;
+            if(strcmp(response_type, "PIN") == 0)
             {
+                PIN = response;
+            }
+            else
+            {
+                if(strcmp(response_type, "PIN-result") == 0 && response.compare("OK"))
+                {
+                    // The client said it authenticated successfully to the card.
+                    // If it had not, the card will error out later
+                    return true;
+                }
                 // TODO: Wrong state?
             }
         }

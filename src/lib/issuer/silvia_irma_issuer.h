@@ -68,11 +68,10 @@ public:
 	~silvia_irma_issuer();
 	
 	/**
-	 * Get the select command sequence, with PIN verification based on the specified PIN
-	 * @param PIN the user PIN
+	 * Get the select command sequence
 	 * @return the command sequence for selecting the IRMA card application
 	 */
-	std::vector<bytestring> get_select_commands(std::string PIN);
+	std::vector<bytestring> get_select_commands();
 	
 	/**
 	 * Submit and verify the select command return values
