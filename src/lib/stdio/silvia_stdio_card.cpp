@@ -81,8 +81,6 @@ bool silvia_stdio_card::transmit(bytestring APDU, bytestring& data, unsigned sho
 
 bool silvia_stdio_card::transmit(bytestring APDU, bytestring& data_sw)
 {
-	if (!connected) return false;
-
     std::cout << "request " << APDU.hex_str() << std::endl << std::flush;
 
     std::string response_type;
