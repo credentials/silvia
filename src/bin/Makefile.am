@@ -4,17 +4,18 @@ MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
 # We can build verifier and issuer with stdio
 SUBDIRS = keygen \
-          manager \
 		  verifier \
 		  issuer
 
-# Only build the command line verifier if we have PC/SC or NFC and XML support!
+# Only build the command line verifier and manager if we have PC/SC or NFC and XML support!
 if BUILD_XMLCFG
 if BUILD_PCSC
 SUBDIRS += proxy
+SUBDIRS += manager
 else
 if BUILD_NFC
 SUBDIRS += proxy
+SUBDIRS += manager
 endif
 endif
 endif
