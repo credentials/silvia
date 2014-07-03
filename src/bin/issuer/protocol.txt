@@ -16,7 +16,9 @@ error no-privkey
 error invalid-parameters
 carderror no-application
 error round-failed <roundnr>
-error communicate-error
+error communicate-error1
+error communicate-error2
+error communicate-error3
 result OK
 
 in:

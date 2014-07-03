@@ -184,13 +184,13 @@ bool verify_pin(silvia_card_channel* card)
             }
             else
             {
-                if(strcmp(response_type, "PIN-result") == 0 && response.compare("OK"))
+                if(strcmp(response_type, "PIN-result") == 0 && response.compare("OK") == 0)
                 {
                     // The client said it authenticated successfully to the card.
                     // If it had not, the card will error out later
                     return true;
                 }
-                // TODO: Wrong state?
+                printf("error protocol-error\n");
             }
         }
         else
@@ -536,7 +536,7 @@ bool issue_one_credential(silvia_card_channel* card, std::string issue_spec, std
                         {
                             if(parseable_output)
                             {
-                                printf("error communicate-error\n"); fflush(stdout);
+                                printf("error communicate-error1\n"); fflush(stdout);
                             }
                             else
                             {
@@ -568,7 +568,7 @@ bool issue_one_credential(silvia_card_channel* card, std::string issue_spec, std
                 {
                     if(parseable_output)
                     {
-                        printf("error communicate-error\n"); fflush(stdout);
+                        printf("error communicate-error2\n"); fflush(stdout);
                     }
                     else
                     {
@@ -615,7 +615,7 @@ bool issue_one_credential(silvia_card_channel* card, std::string issue_spec, std
 	{
         if(parseable_output)
         {
-            printf("error communicate-error\n"); fflush(stdout);
+            printf("error communicate-error3\n"); fflush(stdout);
         }
         else
         {
@@ -853,6 +853,10 @@ int main(int argc, char* argv[])
 		case 's':
 			issuer_privkey = std::string(optarg);
 			break;
+        case 'S':
+            channel_type = SILVIA_CHANNEL_STDIO;
+            parseable_output = true;
+            break;
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 		case 'P':
 			channel_type = SILVIA_CHANNEL_PCSC;
