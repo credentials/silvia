@@ -826,9 +826,9 @@ int main(int argc, char* argv[])
 #elif defined(WITH_NFC)
 	int channel_type = SILVIA_CHANNEL_NFC;
 #endif
-	
+
 #if defined(WITH_PCSC) && defined(WITH_NFC)
-	while ((c = getopt(argc, argv, "I:k:s:dhvSPN")) != -1)
+	while ((c = getopt(argc, argv, "I:i:k:s:dhvSPN")) != -1)
 #else
 	while ((c = getopt(argc, argv, "I:i:k:s:dhvS")) != -1)
 #endif
