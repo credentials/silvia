@@ -122,7 +122,7 @@ void usage(void)
 	printf("Usage:\n");
 	printf("\tsilvia_issuer -I <issue-spec> -k <issuer-pubkey> -s <issuer-privkey> [-d] [-S]");
 #if defined(WITH_PCSC)
-	printf(" [-P] [-N]");
+	printf(" [-P]");
 #endif // WITH_PCSC
 #if defined(WITH_NFC)
     printf(" [-N");
@@ -819,16 +819,20 @@ int main(int argc, char* argv[])
 	std::string issuer_privkey;
 	std::string issue_script;
 	int c = 0;
-#if defined(WITH_PCSC) && defined(WITH_NFC)
-	int channel_type = SILVIA_CHANNEL_PCSC;
-#elif defined(WITH_PCSC)
+#if defined(WITH_PCSC)
 	int channel_type = SILVIA_CHANNEL_PCSC;
 #elif defined(WITH_NFC)
 	int channel_type = SILVIA_CHANNEL_NFC;
+#else
+    int channel_type = SILVIA_CHANNEL_STDIO;
 #endif
 
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	while ((c = getopt(argc, argv, "I:i:k:s:dhvSPN")) != -1)
+#elif defined(WITH_PCSC)
+	while ((c = getopt(argc, argv, "I:i:k:s:dhvSP")) != -1)
+#elif define(WITH_NFC)
+	while ((c = getopt(argc, argv, "I:i:k:s:dhvSN")) != -1)
 #else
 	while ((c = getopt(argc, argv, "I:i:k:s:dhvS")) != -1)
 #endif
@@ -857,10 +861,12 @@ int main(int argc, char* argv[])
             channel_type = SILVIA_CHANNEL_STDIO;
             parseable_output = true;
             break;
-#if defined(WITH_PCSC) && defined(WITH_NFC)
+#if defined(WITH_PCSC)
 		case 'P':
 			channel_type = SILVIA_CHANNEL_PCSC;
 			break;
+#endif
+#if defined(WITH_NFC)
 		case 'N':
 			channel_type = SILVIA_CHANNEL_NFC;
 			break;
