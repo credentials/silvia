@@ -279,7 +279,15 @@ bool communicate_with_card(silvia_card_channel* card, std::vector<bytestring>& c
 		
 		cmd_ctr++;
 		
-		if (result.substr(result.size() - 2) != "9000")
+        if (result.substr(result.size() - 2) == "6B00")
+        {
+            // This is a workaround for the fact that we have no idea how many attributes were in the current credential (we do not read the Issues spec)
+            // With INS_ADMIN_ATTRIBUTE (getting attribute value), this error is returned if we ask more values than are present in this credential
+            // Let's just continue for now, because who knows what we might request more in the future?
+            // Because we bail out before the push_back, we do not store anything, so we don't show anything either.
+            continue;
+        }
+		else if (result.substr(result.size() - 2) != "9000")
 		{
 			// Return values between 63C0--63CF indicate a wrong PIN
 			const unsigned int PIN_attempts = ((result.substr(result.size() - 2) ^ "63C0")[0] << 8) | ((result.substr(result.size() - 2) ^ "63C0")[1]);
@@ -471,7 +479,7 @@ bool read_credential(silvia_card_channel* card, std::string cred, std::string us
 		printf("Failed to communicate with the card, was it removed prematurely?\n");
 		rv = false;
 	} else {
-		for (int i = 3; i < 8; i++) {
+		for (int i = 3; i < results.size(); i++) {
 		
 			// Remove 0x9000
 			std::string attr_hex = results[i].hex_str().substr(0, results[i].hex_str().size() - 4);;
