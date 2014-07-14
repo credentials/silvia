@@ -736,9 +736,7 @@ int main(int argc, char* argv[])
 	std::string issuer_pubkey;
 	bool force_pin = false;
 	int c = 0;
-#if defined(WITH_PCSC) && defined(WITH_NFC)
-	int channel_type = SILVIA_CHANNEL_PCSC;
-#elif defined(WITH_PCSC)
+#if defined(WITH_PCSC)
 	int channel_type = SILVIA_CHANNEL_PCSC;
 #elif defined(WITH_NFC)
 	int channel_type = SILVIA_CHANNEL_NFC;
@@ -748,6 +746,10 @@ int main(int argc, char* argv[])
 	
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	while ((c = getopt(argc, argv, "I:V:k:phvSPN")) != -1)
+#if defined(WITH_PCSC)
+	while ((c = getopt(argc, argv, "I:V:k:phvSP")) != -1)
+#if defined(WITH_NFC)
+	while ((c = getopt(argc, argv, "I:V:k:phvSN")) != -1)
 #else
 	while ((c = getopt(argc, argv, "I:V:k:phvS")) != -1)
 #endif
@@ -776,10 +778,12 @@ int main(int argc, char* argv[])
             channel_type = SILVIA_CHANNEL_STDIO;
             parseable_output = true;
             break;
-#if defined(WITH_PCSC) && defined(WITH_NFC)
+#if defined(WITH_PCSC)
 		case 'P':
 			channel_type = SILVIA_CHANNEL_PCSC;
 			break;
+#endif
+#if defined(WITH_NFC)
 		case 'N':
 			channel_type = SILVIA_CHANNEL_NFC;
 			break;
