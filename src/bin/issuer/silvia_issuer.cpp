@@ -831,7 +831,7 @@ int main(int argc, char* argv[])
 	while ((c = getopt(argc, argv, "I:i:k:s:dhvSPN")) != -1)
 #elif defined(WITH_PCSC)
 	while ((c = getopt(argc, argv, "I:i:k:s:dhvSP")) != -1)
-#elif define(WITH_NFC)
+#elif defined(WITH_NFC)
 	while ((c = getopt(argc, argv, "I:i:k:s:dhvSN")) != -1)
 #else
 	while ((c = getopt(argc, argv, "I:i:k:s:dhvS")) != -1)

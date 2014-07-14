@@ -746,9 +746,9 @@ int main(int argc, char* argv[])
 	
 #if defined(WITH_PCSC) && defined(WITH_NFC)
 	while ((c = getopt(argc, argv, "I:V:k:phvSPN")) != -1)
-#if defined(WITH_PCSC)
+#elif defined(WITH_PCSC)
 	while ((c = getopt(argc, argv, "I:V:k:phvSP")) != -1)
-#if defined(WITH_NFC)
+#elif defined(WITH_NFC)
 	while ((c = getopt(argc, argv, "I:V:k:phvSN")) != -1)
 #else
 	while ((c = getopt(argc, argv, "I:V:k:phvS")) != -1)
