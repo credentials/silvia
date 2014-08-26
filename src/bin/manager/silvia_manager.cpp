@@ -630,9 +630,9 @@ int main(int argc, char* argv[])
 #endif
 	
 #if defined(WITH_PCSC) && defined(WITH_NFC)
-	while ((c = getopt(argc, argv, "r:caso:lhvPN")) != -1)
+	while ((c = getopt(argc, argv, "r:cdaso:lhvPN")) != -1)
 #else
-	while ((c = getopt(argc, argv, "r:caso:lhv")) != -1)
+	while ((c = getopt(argc, argv, "r:cdaso:lhv")) != -1)
 #endif
 	{
 		switch (c)
