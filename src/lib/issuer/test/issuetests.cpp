@@ -214,15 +214,13 @@ void issue_tests::test_irma_issuer()
 	
 	silvia_irma_issuer issuer(&pubkey, &privkey, &ispec);
 	
-	std::vector<bytestring> commands = issuer.get_select_commands("1234");
+	std::vector<bytestring> commands = issuer.get_select_commands();
 	
-	CPPUNIT_ASSERT(commands.size() == 2);
+	CPPUNIT_ASSERT(commands.size() == 1);
 	
 	CPPUNIT_ASSERT(commands[0] == "00A4040009F849524D416361726400");
-	CPPUNIT_ASSERT(commands[1] == "00200000083132333400000000");
 	
 	std::vector<bytestring> results;
-	results.push_back("9000");
 	results.push_back("9000");
 	
 	CPPUNIT_ASSERT(issuer.submit_select_data(results));
