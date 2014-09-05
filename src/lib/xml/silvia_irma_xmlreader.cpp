@@ -45,6 +45,7 @@
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
 #include <time.h>
+#include <iostream>
 
 // Initialise the one-and-only instance
 /*static*/ std::auto_ptr<silvia_irma_xmlreader> silvia_irma_xmlreader::_i(NULL);
@@ -68,6 +69,7 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 	
 	if (xmldoc == NULL)
 	{
+		// error printed to stdout by libxml2
 		return NULL;
 	}
 	
@@ -77,7 +79,7 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 	if ((root_elem == NULL) || (xmlStrcasecmp(root_elem->name, (const xmlChar*) "IssueSpecification") != 0))
 	{
 		xmlFreeDoc(xmldoc);
-		
+		std::cerr << id_file_name << ": root element IssueSpecification not found" << std::endl;
 		return NULL;
 	}
 	
@@ -94,6 +96,7 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 	
 	if (child_elem == NULL)
 	{
+		std::cerr << id_file_name << ": missing Id element in IssueSpecification" << std::endl;
 		xmlFreeDoc(xmldoc);
 		
 		return NULL;
@@ -103,6 +106,7 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 	
 	if (id_value == NULL)
 	{
+		std::cerr << id_file_name << ": Id element in IssueSpecification has no value" << std::endl;
 		xmlFreeDoc(xmldoc);
 		
 		return NULL;
@@ -122,6 +126,7 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 	
 	if (xmldoc == NULL)
 	{
+		// error printed to stdout by libxml2
 		return NULL;
 	}
 	
@@ -130,6 +135,8 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 	
 	if ((root_elem == NULL) || (xmlStrcasecmp(root_elem->name, (const xmlChar*) "VerifySpecification") != 0))
 	{
+		std::cerr << vd_file_name << ": root element VerifySpecification not found" << std::endl;
+		
 		xmlFreeDoc(xmldoc);
 		
 		return NULL;
@@ -169,6 +176,10 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 				
 				short_msg_set = true;
 			}
+			else
+			{
+				std::cerr << vd_file_name << ": Name element in VerifySpecification has no value" << std::endl;
+			}
 		}
 		else if (xmlStrcasecmp(child_elem->name, (const xmlChar*) "VerifierID") == 0)
 		{
@@ -181,6 +192,10 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 				xmlFree(verifier_id_value);
 				
 				verifier_name_set = true;
+			}
+			else
+			{
+				std::cerr << vd_file_name << ": Verifier element in VerifySpecification has no value" << std::endl;
 			}
 		}
 		else if (xmlStrcasecmp(child_elem->name, (const xmlChar*) "Id") == 0)
@@ -195,6 +210,10 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 				
 				verifier_id_set = true;
 			}
+			else
+			{
+				std::cerr << vd_file_name << ": Id element in VerifySpecification has no value" << std::endl;
+			}
 		}
 		else if (xmlStrcasecmp(child_elem->name, (const xmlChar*) "AttributeModes") == 0)
 		{
@@ -208,6 +227,8 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 					
 					if (attr_id_value == NULL)
 					{
+						std::cerr << vd_file_name << ": id property in AttributeMode element not set" << std::endl;
+						
 						xmlFreeDoc(xmldoc);
 						
 						return NULL;
@@ -222,6 +243,8 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 					if (mode_value == NULL)
 					{
 						// Missing mandatory attribute
+						std::cerr << vd_file_name << ": mode property in AttributeMode element not set" << std::endl;
+						
 						xmlFreeDoc(xmldoc);
 						
 						return NULL;
@@ -238,6 +261,8 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 					else
 					{
 						// Unknown value for mode
+						std::cerr << vd_file_name << ": unknown mode " << mode_value << " in AttributeMode element not set" << std::endl;
+						
 						xmlFreeDoc(xmldoc);
 						
 						return NULL;
@@ -258,6 +283,22 @@ silvia_verifier_specification* silvia_irma_xmlreader::read_verifier_spec(const s
 	
 	if (!verifier_name_set || !short_msg_set || !verifier_id_set || !attribute_names_set || !D_set)
 	{
+		if (!verifier_name_set)
+		{
+			std::cerr << vd_file_name << ": missing VerifierID element in IssueSpecification" << std::endl;
+		}
+		if (!short_msg_set)
+		{
+			std::cerr << vd_file_name << ": missing Name element in IssueSpecification" << std::endl;
+		}
+		if (!verifier_id_set)
+		{
+			std::cerr << vd_file_name << ": missing Id element in IssueSpecification" << std::endl;
+		}
+		if (!attribute_names_set || !D_set)
+		{
+			std::cerr << vd_file_name << ": missing AttributeModes element in IssueSpecification" << std::endl;
+		}
 		return NULL;
 	}
 	
@@ -277,7 +318,7 @@ silvia_issue_specification* silvia_irma_xmlreader::read_issue_spec(const std::st
 	if ((root_elem == NULL) || (xmlStrcasecmp(root_elem->name, (const xmlChar*) "CredentialIssueSpecification") != 0))
 	{
 		xmlFreeDoc(xmldoc);
-		
+		std::cerr << issue_spec_file_name << ": root element CredentialIssueSpecification not found" << std::endl;
 		return NULL;
 	}
 	
@@ -308,6 +349,10 @@ silvia_issue_specification* silvia_irma_xmlreader::read_issue_spec(const std::st
 				
 				name_set = true;
 			}
+			else
+			{
+				std::cerr << issue_spec_file_name << ": element Name in CredentialIssueSpecification has no value" << std::endl;
+			}
 		}
 		else if (xmlStrcasecmp(child_elem->name, (const xmlChar*) "IssuerID") == 0)
 		{
@@ -321,6 +366,10 @@ silvia_issue_specification* silvia_irma_xmlreader::read_issue_spec(const std::st
 				
 				issuer_set = true;
 			}
+			else
+			{
+				std::cerr << issue_spec_file_name << ": element IssuerID in CredentialIssueSpecification has no value" << std::endl;
+			}
 		}
 		else if (xmlStrcasecmp(child_elem->name, (const xmlChar*) "Id") == 0)
 		{
@@ -333,6 +382,10 @@ silvia_issue_specification* silvia_irma_xmlreader::read_issue_spec(const std::st
 				xmlFree(id_value);
 				
 				id_set = true;
+			}
+			else
+			{
+				std::cerr << issue_spec_file_name << ": element Id in CredentialIssueSpecification has no value" << std::endl;
 			}
 		}
 		else if (xmlStrcasecmp(child_elem->name, (const xmlChar*) "Expires") == 0)
@@ -353,6 +406,10 @@ silvia_issue_specification* silvia_irma_xmlreader::read_issue_spec(const std::st
 				
 				expires_set = true;
 			}
+			else
+			{
+				std::cerr << issue_spec_file_name << ": element Expires in CredentialIssueSpecification has no value" << std::endl;
+			}
 		}
 		else if (xmlStrcasecmp(child_elem->name, (const xmlChar*) "Attributes") == 0)
 		{
@@ -370,6 +427,8 @@ silvia_issue_specification* silvia_irma_xmlreader::read_issue_spec(const std::st
 					if (attr_type == NULL)
 					{
 						// Malformed specification!
+						std::cerr << issue_spec_file_name << ": type property of Attribute element not set" << std::endl;
+						
 						xmlFreeDoc(xmldoc);
 						
 						return NULL;
@@ -383,8 +442,6 @@ silvia_issue_specification* silvia_irma_xmlreader::read_issue_spec(const std::st
 					{
 						silvia_attr_type = SILVIA_STRING_ATTR;
 					}
-					
-					xmlFree(attr_type);
 					
 					// Now read the value; name is not actually used, it's just there for
 					// human convenience
@@ -411,8 +468,11 @@ silvia_issue_specification* silvia_irma_xmlreader::read_issue_spec(const std::st
 					
 					if (value.empty())
 					{
+						std::cerr << issue_spec_file_name << ": Value element in Attribute not found" << std::endl;
+						
 						// Malformed specification
 						xmlFreeDoc(xmldoc);
+						xmlFree(attr_type);
 						
 						return NULL;
 					}
@@ -438,10 +498,14 @@ silvia_issue_specification* silvia_irma_xmlreader::read_issue_spec(const std::st
 						break;
 					default:
 						// Malformed specification
+						std::cerr << issue_spec_file_name << ": unknown Attribute type " << attr_type << std::endl;
+						
 						xmlFreeDoc(xmldoc);
+						xmlFree(attr_type);
 						
 						return NULL;
 					}
+					xmlFree(attr_type);
 				}
 				
 				attribute = attribute->next;
@@ -455,8 +519,29 @@ silvia_issue_specification* silvia_irma_xmlreader::read_issue_spec(const std::st
 	
 	if (!name_set || !issuer_set || !id_set || !expires_set || attribute_values.empty())
 	{
+		if (!name_set)
+		{
+			std::cerr << issue_spec_file_name << ": missing Name element in CredentialIssueSpecification" << std::endl;
+		}
+		if (!issuer_set)
+		{
+			std::cerr << issue_spec_file_name << ": missing IssuerID element in CredentialIssueSpecification" << std::endl;
+		}
+		if (!id_set)
+		{
+			std::cerr << issue_spec_file_name << ": missing Id element in CredentialIssueSpecification" << std::endl;
+		}
+		if (!expires_set)
+		{
+			std::cerr << issue_spec_file_name << ": missing Expires element in CredentialIssueSpecification" << std::endl;
+		}
+		if (attribute_values.empty())
+		{
+			std::cerr << issue_spec_file_name << ": missing Attribute element(s) in CredentialIssueSpecification" << std::endl;
+		}
 		return NULL;
 	}
+     
 
 	// Construct credential issue specification
 	return new silvia_issue_specification(name, issuer, id, expires, attribute_values);
