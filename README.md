@@ -60,6 +60,13 @@ If you are root (administrative user), run:
 Together with the library, silvia provides different clients for issuing and verifying credentials,
 generating a Camenisch-Lysyanskaya (CL) keypair for a certain issuer and managing the IRMA card.
 
+For basic usage, you need 3 xml specifications and 2 key files:
+* An Issue Specification, which specifies the credentials to issue. Needed by the issuer.
+* An Issuer Specification, which specifies who issued the credentials. Needed by the verifier.
+* A verification specification, which specifies what credentials are verified. Needed by the verifier.
+* A public key file of the issuer. Needed by both the issuer and the verifier.
+* A private key file of the issuer. Needed by the issuer.
+
 ####5.1 Generating a CL keypair 
 
 For generating a keypair for issuing and verifying credentials, ```silvia_keygen``` is utililzed:
@@ -98,6 +105,11 @@ where ```ipk.xml``` is the public key of the issuer and ```isk.xml``` contains i
 
 To issue a credential, you can create your own credential description or rely on the definitions
 from [credentials/irma_configuration](https://github.com/credentials/irma_configuration).
+
+You need both the public and private key file of the issuer, and an
+issue specification (an xml file with root element
+CredentialIssueSpecification).
+
 In order to issue a new credential with the generated keys in Step 5.1, we use ```silvia_issuer```:
 ```
 $ ./silvia_issuer -h
@@ -168,6 +180,13 @@ $ ./silvia_issuer -I test/ageLower-test.xml -k ipk.xml -s isk.xml
 
 In order to verify the just issued credential, you need to get the
 necessary files from [credentials/irma_configuration](https://github.com/credentials/irma_configuration).
+
+You need the public key of the issuer, a verification specification
+(an xml file with root element VerifySpecification), and an issuer
+specification (an xml file with root element IssueSpecification).
+Note that the issuer specification is not the same as the issue
+specification used when issuing credentials.
+
 Once you have the right files you can verify the credential using ```silvia_verifier```:
 ```
 $ ./silvia_verifier -h
