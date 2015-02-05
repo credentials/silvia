@@ -23,6 +23,7 @@ To build the library:
  - OpenSSL (>= 0.9.8), [ the Open Source toolkit for SSL/TLS ](http://www.openssl.org/)
  - libnfc (>= 1.7.0-rc8), [ the Public platform independent Near Field Communication (NFC) library ](http://nfc-tools.org/index.php?title=Libnfc)
  - libxml2 (>= 2.0), [ the XML C parser and toolkit ](http://xmlsoft.org/)
+ - pcsclite (>= 1.4.0)
 
 To run the tests:
 
