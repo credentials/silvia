@@ -768,7 +768,14 @@ void execute_issue_script(int channel_type, std::string issue_script)
 		card = nfc_card;
 	}
 #endif // WITH_NFC
-		
+	if (channel_type == SILVIA_CHANNEL_STDIO)
+	{
+		silvia_stdio_card* stdio_card = NULL;
+		stdio_card = new silvia_stdio_card();
+
+		card = stdio_card;
+	}
+
 	printf("OK\n");
 
 	// Issue the credentials specified in the script
