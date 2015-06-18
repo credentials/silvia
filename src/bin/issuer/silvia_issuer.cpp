@@ -715,7 +715,10 @@ void do_issue(int channel_type, std::string issue_spec, std::string issuer_pubke
 
 void execute_issue_script(int channel_type, std::string issue_script)
 {
-	printf("Silvia command-line IRMA issuer %s\n\n", VERSION);
+	if (!parseable_output)
+	{
+		printf("Silvia command-line IRMA issuer %s\n\n", VERSION);
+	}
 
 	// Read the issuing script
 	silvia_issuescript script(issue_script);
@@ -730,9 +733,12 @@ void execute_issue_script(int channel_type, std::string issue_script)
 	silvia_card_channel* card = NULL;
 	
 	// Wait for card
-	printf("\n********************************************************************************\n");
-	printf("Starting issue script: %s\n\n", script.get_description().c_str());
-	printf("Waiting for card");
+	if (!parseable_output)
+	{
+		printf("\n********************************************************************************\n");
+		printf("Starting issue script: %s\n\n", script.get_description().c_str());
+		printf("Waiting for card");
+	}
 	
 #ifdef WITH_PCSC
 	if (channel_type == SILVIA_CHANNEL_PCSC)
@@ -768,8 +774,17 @@ void execute_issue_script(int channel_type, std::string issue_script)
 		card = nfc_card;
 	}
 #endif // WITH_NFC
-		
-	printf("OK\n");
+	if (channel_type == SILVIA_CHANNEL_STDIO)
+	{
+		silvia_stdio_card* stdio_card = NULL;
+		stdio_card = new silvia_stdio_card();
+
+		card = stdio_card;
+	}
+	if (!parseable_output)
+	{
+		printf("OK\n");
+	}
 
 	// Issue the credentials specified in the script
 
@@ -795,16 +810,19 @@ void execute_issue_script(int channel_type, std::string issue_script)
 		isks_it++;
 	}
 
-	printf("Waiting for card to be removed... "); fflush(stdout);
-	
-	while (card->status())
+	if (!parseable_output)
 	{
-		usleep(10000);
+		printf("Waiting for card to be removed... "); fflush(stdout);
+
+		while (card->status())
+		{
+			usleep(10000);
+		}
+
+		printf("OK\n");
+
+		printf("********************************************************************************\n");
 	}
-	
-	printf("OK\n");
-	
-	printf("********************************************************************************\n");
 	delete card;
 }
 		
