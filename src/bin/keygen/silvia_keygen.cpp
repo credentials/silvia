@@ -38,6 +38,7 @@
 #include "silvia_macros.h"
 #include <string>
 #include <unistd.h>
+#include <ctime>
 
 // Default modulus size for new keys
 #define DEFAULT_BITSIZE 2048
@@ -61,7 +62,7 @@ void usage(void)
 {
 	printf("Silvia issuer key generation utility %s\n\n", VERSION);
 	printf("Usage:\n");
-	printf("\tsilvia_keygen -a <#-attribs> [-n <bits>] [-p <file>] [-P <file>] [-u <URI>]\n");
+	printf("\tsilvia_keygen -a <#-attribs> [-n <bits>] [-c <counter>] [-d <timestamp>] [-p <file>] [-P <file>] [-u <URI>]\n");
 	printf("\tsilvia_keygen -h\n");
 	printf("\tsilvia_keygen -v\n");
 	printf("\n");
@@ -69,6 +70,8 @@ void usage(void)
 	printf("\t               <#-attribs> attributes per credentials\n");
 	printf("\t-n <bits>      Generate a key-pair with a <bits>-bit modulus (defaults\n");
 	printf("\t               to %d)\n", DEFAULT_BITSIZE);
+	printf("\t-c <counter>   Integer specifying the counter of the keypair (defaults to 0)\n");
+	printf("\t-d <timestamp> Timestamp specifying the expiry of this keypair (defaults to 1 year from now)\n");
 	printf("\t-p <file>      Output the public key to <file> (defaults to stdout)\n");
 	printf("\t-P <file>      Output the private key to <file> (defaults to stdout)\n");
 	printf("\t-u <URI>       Base URI used to reference other Idemix files (defaults to http://www.irmacard.org/credentials/)\n");
@@ -78,7 +81,13 @@ void usage(void)
 	printf("\t-v             Print the version number\n");
 }
 
-int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, std::string base_URI, unsigned long num_attribs, unsigned long bit_size)
+int generate_key_pair(FILE* pub_key_file,
+		FILE* priv_key_file,
+		std::string base_URI,
+		unsigned long num_attribs,
+		unsigned long bit_size,
+		unsigned long counter,
+		unsigned long expiry)
 {
 	printf("Generating %lu-bit issuer key pair for %lu attributes ... ", bit_size, num_attribs); fflush(stdout);
 	
@@ -96,6 +105,8 @@ int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, std::string base_
 	// Output the public key
 	fprintf(pub_key_file, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 	fprintf(pub_key_file, "<IssuerPublicKey xmlns=\"http://www.zurich.ibm.com/security/idemix\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.zurich.ibm.com/security/idemix IssuerPublicKey.xsd\">\n");
+	fprintf(pub_key_file, "  <Counter>%lu</Counter>\n", counter);
+	fprintf(pub_key_file, "  <ExpiryDate>%lu</ExpiryDate>\n", expiry);
 	fprintf(pub_key_file, "  <References>\n");
     fprintf(pub_key_file, "%s", std::string("    <GroupParameters>" + base_URI + "gp.xml</GroupParameters>\n").c_str());
 	fprintf(pub_key_file, "  </References>\n");
@@ -120,6 +131,8 @@ int generate_key_pair(FILE* pub_key_file, FILE* priv_key_file, std::string base_
 	// Output the private key
 	fprintf(priv_key_file, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 	fprintf(priv_key_file, "<IssuerPrivateKey xmlns=\"http://www.zurich.ibm.com/security/idemix\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.zurich.ibm.com/security/idemix IssuerPrivateKey.xsd\">\n");
+	fprintf(pub_key_file, "  <Counter>%lu</Counter>\n", counter);
+	fprintf(pub_key_file, "  <ExpiryDate>%lu</ExpiryDate>\n", expiry);
 	fprintf(priv_key_file, "  <References>\n");
     fprintf(priv_key_file, "%s", std::string("    <IssuerPublicKey>" + base_URI + "ipk.xml</IssuerPublicKey>\n").c_str());
 	fprintf(priv_key_file, "  </References>\n");
@@ -143,12 +156,22 @@ int main(int argc, char* argv[])
 	// Program parameters
 	unsigned long bit_size = DEFAULT_BITSIZE;
 	unsigned long num_attribs = 0;
+	unsigned long counter = 0;
+	time_t expiry = std::time(NULL);
 	std::string pub_key_filename;
 	std::string priv_key_filename;
 	std::string base_URI = DEFAULT_BASE_URI;
 	int c = 0;
 	
-	while ((c = getopt(argc, argv, "a:n:p:P:u:hv")) != -1)
+	// Add a year to expiry and round it down to 1 day
+	struct tm* now = localtime(&expiry);
+	now->tm_year = now->tm_year + 1;
+	now->tm_hour = 0;
+	now->tm_min = 0;
+	now->tm_sec = 0;
+	expiry = mktime(now);
+
+	while ((c = getopt(argc, argv, "a:n:c:d:p:P:u:hv")) != -1)
 	{
 		switch (c)
 		{
@@ -163,6 +186,12 @@ int main(int argc, char* argv[])
 			break;
 		case 'n':
 			bit_size = strtoul(optarg, NULL, 10);
+			break;
+		case 'c':
+			counter = strtoul(optarg, NULL, 10);
+			break;
+		case 'd':
+			expiry = strtoul(optarg, NULL, 10);
 			break;
 		case 'p':
 			pub_key_filename = std::string(optarg);
@@ -214,7 +243,7 @@ int main(int argc, char* argv[])
 		printf("Writing private key to %s\n", priv_key_filename.c_str());
 	}
 	
-	generate_key_pair(pub_key_file, priv_key_file, base_URI, num_attribs, bit_size);
+	generate_key_pair(pub_key_file, priv_key_file, base_URI, num_attribs, bit_size, counter, expiry);
 	
 	if (!pub_key_filename.empty()) fclose(pub_key_file);
 	if (!priv_key_filename.empty()) fclose(priv_key_file);
