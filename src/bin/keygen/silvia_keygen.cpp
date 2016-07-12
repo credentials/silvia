@@ -131,8 +131,8 @@ int generate_key_pair(FILE* pub_key_file,
 	// Output the private key
 	fprintf(priv_key_file, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
 	fprintf(priv_key_file, "<IssuerPrivateKey xmlns=\"http://www.zurich.ibm.com/security/idemix\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.zurich.ibm.com/security/idemix IssuerPrivateKey.xsd\">\n");
-	fprintf(pub_key_file, "  <Counter>%lu</Counter>\n", counter);
-	fprintf(pub_key_file, "  <ExpiryDate>%lu</ExpiryDate>\n", expiry);
+	fprintf(priv_key_file, "  <Counter>%lu</Counter>\n", counter);
+	fprintf(priv_key_file, "  <ExpiryDate>%lu</ExpiryDate>\n", expiry);
 	fprintf(priv_key_file, "  <References>\n");
     fprintf(priv_key_file, "%s", std::string("    <IssuerPublicKey>" + base_URI + "ipk.xml</IssuerPublicKey>\n").c_str());
 	fprintf(priv_key_file, "  </References>\n");
